@@ -1,4 +1,6 @@
 from move import Move
+import random
+
 
 class GameState():
 
@@ -12,12 +14,23 @@ class GameState():
 			["-", "-", "-", "-", "-", "-", "-", "-",],
 			["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
 			["wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"]]
+		
+		#variables for castling
+		self.whiteKingMoved = False
+		self.blackKingMoved =  False
+		self.leftWhiteRookMoved = False
+		self.rightWhiteRookMoved = False
+		self.leftBlackRookMoved = False
+		self.rightBlackRookMoved = False
+		
+		#gamestate variables
+		self.checkmate = False
+		self.stalemate = False
 		self.whiteMove = True #keep track of turn
 		self.moveLog = [] #store track of all moves
 		self.whiteKingLoc = (7, 4)
 		self.blackKingLoc = (0, 4)
-		self.checkmate = False
-		self.stalemate = False
+		
 
 		
 	'''
@@ -32,11 +45,25 @@ class GameState():
 		
 		self.checkPromotions(self.board, move)
 		
+		#check rooks for castling
+		if move.startRow == 0:
+			if move.startCol == 0:
+				self.leftBlackRookMoved = True
+			elif move.startCol == 7:
+				self.rightBlackRookMoved = True
+		elif move.startRow == 7:
+			if move.startCol == 0:
+				self.leftWhiteRookMoved = True
+			elif move.startCol == 7:
+				self.rightWhiteRookMoved = True
+		
 		#update king
 		if move.pieceMoved == 'wk':
 			self.whiteKingLoc = (move.endRow, move.endCol)
+			self.whiteKingMoved = True
 		if move.pieceMoved == 'bk':
 			self.blackKingLoc = (move.endRow, move.endCol)
+			self.blackKingMoved =  True
 		
 		
 	def undoMove(self):
@@ -218,5 +245,8 @@ class GameState():
 			f.write('game = [{}, {}]'.format(winner, self.moveLog))
 			f.write("\n")
 
-	
-	
+	#if color = a AI vs AI, color = w W vs AI, color = b B vs AI		
+	def AI(self, moves):
+		rNum = random.randint(0,len(moves)-1)
+		self.makeMove(moves[rNum])
+		

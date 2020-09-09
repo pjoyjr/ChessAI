@@ -1,8 +1,8 @@
 from engine import GameState, Move
 
 import pygame as p  
-import sys      
-
+import sys
+import time
 
 WIDTH = HEIGHT = 512
 DIM = 8
@@ -94,23 +94,44 @@ def main():
 				if gs.inCheck():
 					sys.stdout.write("Check!\n")
 					sys.stdout.flush()
-					
-		drawGame(screen, gs)
+		
+		#AI PLAYING?
+		if gs.whiteMove == False:
+			gs.AI(validMoves)
+			moveMade = True
+		
+		drawGame(screen, gs, sqSelected, validMoves)
 		clock.tick(FPS)
 		p.display.flip()
 		
 		
-def drawGame(screen, gs):
-	drawBoard(screen) #draw squares on board
+def drawGame(screen, gs, attackPiece, validMoves):
+	drawSquares(screen) #draw squares on board
+	drawHighlightMoves(screen, gs, attackPiece, validMoves)
+	drawLines(screen)
 	drawPieces(screen, gs.board) #draw pieces on top of squares
 	
-def drawBoard(screen):
+def drawSquares(screen):
 	colors = [p.Color("tan1"), p.Color("rosybrown2")]
 	for row in range(DIM):
 		for col in range(DIM):
 				color = colors[((col+row)%2)]
 				p.draw.rect(screen, color, p.Rect(col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-
+				
+def drawHighlightMoves(screen, gs, attackPiece, validMoves):
+	if str(attackPiece) != '()':
+		color = p.Color("palegoldenrod")
+		for move in validMoves:
+			if attackPiece[0] == move.startRow and attackPiece[1] == move.startCol:
+				p.draw.rect(screen, color, p.Rect(move.endCol*SQ_SIZE, move.endRow*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+				
+def drawLines(screen):
+	color = p.Color("black")
+	for row in range(1,DIM):
+		for col in range(1,DIM):
+				p.draw.line(screen, color, (col*SQ_SIZE, 0), (col*SQ_SIZE, WIDTH), 2)
+				p.draw.line(screen, color, (0, row*SQ_SIZE), (HEIGHT, row*SQ_SIZE), 2)
+	
 def drawPieces(screen, board):
 	for row in range(DIM):
 		for col in range(DIM):
