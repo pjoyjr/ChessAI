@@ -1,0 +1,222 @@
+from move import Move
+
+class GameState():
+
+	#init board
+	def __init__(self):
+		self.board = [["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
+			["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
+			["-", "-", "-", "-", "-", "-", "-", "-",],
+			["-", "-", "-", "-", "-", "-", "-", "-",],
+			["-", "-", "-", "-", "-", "-", "-", "-",],
+			["-", "-", "-", "-", "-", "-", "-", "-",],
+			["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
+			["wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"]]
+		self.whiteMove = True #keep track of turn
+		self.moveLog = [] #store track of all moves
+		self.whiteKingLoc = (7, 4)
+		self.blackKingLoc = (0, 4)
+		self.checkmate = False
+		self.stalemate = False
+
+		
+	'''
+	not valid for castling, and en-passant
+	NEED TO WRITE A CHESS NOTATION
+	'''
+	def makeMove(self, move):
+		self.board[move.startRow][move.startCol] = "-"
+		self.board[move.endRow][move.endCol] = move.pieceMoved
+		self.moveLog.append(move) #log move so we can undo
+		self.whiteMove = not self.whiteMove #switch players
+		
+		self.checkPromotions(self.board, move)
+		
+		#update king
+		if move.pieceMoved == 'wk':
+			self.whiteKingLoc = (move.endRow, move.endCol)
+		if move.pieceMoved == 'bk':
+			self.blackKingLoc = (move.endRow, move.endCol)
+		
+		
+	def undoMove(self):
+		if(len(self.moveLog) != 0):
+			move = self.moveLog.pop()
+			self.board[move.startRow][move.startCol] = move.pieceMoved
+			self.board[move.endRow][move.endCol] = move.pieceCaptured
+			self.whiteMove = not self.whiteMove
+			
+			#update king
+			if move.pieceMoved == 'wk':
+				self.whiteKingLoc = (move.startRow, move.startCol)
+			if move.pieceMoved == 'bk':
+				self.blackKingLoc = (move.startRow, move.startCol)
+			
+	def getValidMoves(self):
+		#1. generate all possible moves
+		moves = self.getAllPossibleMoves()
+		#2. for each move, 
+		for i in range(len(moves)-1, -1, -1): #transverse list backwards so we can delete if need be safely
+			#3. generate all opponents moves
+			self.makeMove(moves[i])
+			#4. for each of opponents moves, see if they attack your king
+			self.whiteMove = not self.whiteMove
+			if self.inCheck():
+				moves.remove(moves[i]) #5. if they do attack your king that move is not valid
+			self.whiteMove = not self.whiteMove
+			self.undoMove()
+		if len(moves) == 0: #either checkmate or stalemate
+			if self.inCheck():
+				self.checkmate = True
+			else:
+				self.stalemate = True
+		else:
+			self.checkmate = False
+			self.stalemate = False
+			
+		return moves
+	
+	
+	#check if current player is in check
+	def inCheck(self):
+		if self.whiteMove:
+			return self.squareUnderAttack(self.whiteKingLoc[0], self.whiteKingLoc[1])
+		else:
+			return self.squareUnderAttack(self.blackKingLoc[0], self.blackKingLoc[1])
+			
+			
+	
+	#see if enemy can attack this squareUnderAttack
+	def squareUnderAttack(self, r, c):
+		self.whiteMove = not self.whiteMove
+		oppMoves = self.getAllPossibleMoves()
+		self.whiteMove = not self.whiteMove
+		for move in oppMoves:
+			if move.endRow == r and move.endCol == c: ## square under attack
+				return True
+		return False
+	
+	#scan all of board and get list of all possible moves not checking for self check
+	def getAllPossibleMoves(self):
+		moves = []
+		for r in range(len(self.board)): 
+			for c in range(len(self.board[r])):
+				turn = self.board[r][c][0]
+				if (turn == 'w' and self.whiteMove) or (turn == 'b' and not self.whiteMove):
+					piece = self.board[r][c][1]
+					self.getMoves(piece,r, c, moves)
+		return moves
+	
+	#pawn promotions
+	def checkPromotions(self, board, move):
+		if move.pieceMoved[1] == 'p':
+			if move.endRow == 7:
+				board[move.endRow][move.endCol] = 'bq'
+			if move.endRow == 0:
+				board[move.endRow][move.endCol] = 'wq'
+		
+	
+	#return all moves possible for such piece not checking for self check
+	def getMoves(self, piece, r, c, moves):
+		enemyColor = "b" if self.whiteMove else "w"
+		allyColor = "b" if enemyColor == "w" else "w"
+		
+		#PAWN MOVEMENT
+		if piece == 'p':
+			if allyColor == "w": #white pawn moves
+				#move forward
+				if self.board[r-1][c] == "-":
+					moves.append(Move((r, c), (r-1, c), self.board))
+					if r == 6 and self.board[r-2][c] == "-":
+						moves.append(Move((r, c), (r-2, c), self.board))
+				#capture enemy piece
+				if c-1 >= 0: #capture to left
+					if self.board[r-1][c-1][0] == 'b':
+						moves.append(Move((r, c), (r-1, c-1), self.board))
+				if c+1 <= 7: #capture to right
+					if self.board[r-1][c+1][0] == 'b':
+						moves.append(Move((r, c), (r-1, c+1), self.board))	
+						
+			else: #black pawn moves
+				#move forwards
+				if self.board[r+1][c] == "-":
+					moves.append(Move((r, c), (r+1, c), self.board))
+					if r == 1 and self.board[r+2][c] == "-":
+						moves.append(Move((r, c), (r+2, c), self.board))
+				#capture enemy piece		
+				if c-1 >= 0: #capture to left
+					if self.board[r+1][c-1][0] == 'w':
+						moves.append(Move((r, c), (r+1, c-1), self.board))
+				if c+1 <= 7: #capture to right
+					if self.board[r+1][c+1][0] == 'w':
+						moves.append(Move((r, c), (r+1, c+1), self.board))
+						
+		#KNIGHT MOVEMENT
+		elif piece == 'n':
+			directions = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
+			for d in directions:
+				endRow = r + d[0]
+				endCol = c + d[1]
+				if 0 <= endRow < 8 and 0 <= endCol < 8:
+					endPiece = self.board[endRow][endCol]
+					if endPiece[0] != allyColor: #empty or enemy piece
+						moves.append(Move((r, c), (endRow, endCol), self.board))
+						
+		#KING MOVEMENT
+		elif piece == 'k':
+			directions = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
+			for i in range(8):
+				endRow = r + directions[i][0]
+				endCol = c + directions[i][1]
+				if 0 <= endRow < 8 and 0 <= endCol < 8:
+					endPiece = self.board[endRow][endCol]
+					if endPiece[0] != allyColor: #empty or enemy space
+						moves.append(Move((r, c), (endRow, endCol), self.board))
+						
+		#BISHOP/QUEEN MOVEMENT
+		if piece == 'b' or piece == 'q':
+			directions = ((-1, -1), (-1, 1), (1, -1), (1, 1))
+			for d in directions:
+				for i in range(1, 8):
+					endRow = r + d[0] * i
+					endCol = c + d[1] * i
+					if 0 <= endRow < 8 and 0 <= endCol < 8:
+						endPiece = self.board[endRow][endCol]
+						if endPiece == "-":
+							moves.append(Move((r, c), (endRow, endCol), self.board))
+						elif endPiece[0] == enemyColor:
+							moves.append(Move((r, c), (endRow, endCol), self.board))
+							break;
+						else: #friendly piece
+							break
+					else: # off board
+						break
+						
+		#ROOK/QUEEN MOVEMENT
+		if piece == 'r' or piece == 'q':
+			directions = ((-1, 0), (0, -1), (1, 0), (0, 1)) #up, left, down, right
+			for d in directions:
+				for i in range(1, 8):
+					endRow = r + d[0] * i
+					endCol = c + d[1] * i
+					if 0 <= endRow < 8 and  0 <= endCol < 8: #on board
+						endPiece = self.board[endRow][endCol]
+						if endPiece == "-": #open spot
+							moves.append(Move((r, c), (endRow, endCol), self.board))
+						elif endPiece[0] == enemyColor: #enemy spot
+							moves.append(Move((r, c), (endRow, endCol), self.board))
+							break
+						else: #friendly piece
+							break
+					else: #off board
+						break
+
+	#write results to file after game is over with move log and winner
+	def writeResults(self, winner):
+		fname = 'gameHistory.py'
+		with open(fname, 'a') as f:
+			f.write('game = [{}, {}]'.format(winner, self.moveLog))
+			f.write("\n")
+
+	
+	
