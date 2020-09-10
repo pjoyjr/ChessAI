@@ -34,12 +34,42 @@ class GameState():
 
 		
 	'''
-	not valid for castling, and en-passant
+	flag bit notation: 
+	0 = normal move
+	1 = white en passant left
+	2 = white en passant right
+	3 = white en passant left
+	4 = white en passant left
+	5 = white castle left
+	6 = white castle right
+	7 = black castle left
+	8 = black castle right
+	
+	not valid for castling
+	
 	NEED TO WRITE A CHESS NOTATION
 	'''
 	def makeMove(self, move):
-		self.board[move.startRow][move.startCol] = "-"
-		self.board[move.endRow][move.endCol] = move.pieceMoved
+		if move.flag == 0:
+			self.board[move.startRow][move.startCol] = "-"
+			self.board[move.endRow][move.endCol] = move.pieceMoved
+		elif move.flag == 1:
+			self.board[move.startRow][move.startCol] = "-"
+			self.board[move.startRow][move.startCol-1] = "-"
+			self.board[move.endRow][move.endCol] = move.pieceMoved
+		elif move.flag == 2:
+			self.board[move.startRow][move.startCol] = "-"
+			self.board[move.startRow][move.startCol+1] = "-"
+			self.board[move.endRow][move.endCol] = move.pieceMoved
+		elif move.flag == 3:
+			self.board[move.startRow][move.startCol] = "-"
+			self.board[move.startRow][move.startCol-1] = "-"
+			self.board[move.endRow][move.endCol] = move.pieceMoved
+		elif move.flag == 4:
+			self.board[move.startRow][move.startCol] = "-"
+			self.board[move.startRow][move.startCol+1] = "-"
+			self.board[move.endRow][move.endCol] = move.pieceMoved
+		
 		self.moveLog.append(move) #log move so we can undo
 		self.whiteMove = not self.whiteMove #switch players
 		
@@ -69,8 +99,31 @@ class GameState():
 	def undoMove(self):
 		if(len(self.moveLog) != 0):
 			move = self.moveLog.pop()
-			self.board[move.startRow][move.startCol] = move.pieceMoved
-			self.board[move.endRow][move.endCol] = move.pieceCaptured
+			if move.flag == 0:
+				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.endRow][move.endCol] = move.pieceCaptured
+			
+			elif move.flag == 1:
+				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.endRow][move.endCol] = move.pieceCaptured
+				self.board[move.startRow][move.startCol-1] = "bp"
+			
+			elif move.flag == 2:
+				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.endRow][move.endCol] = move.pieceCaptured
+				self.board[move.startRow][move.startCol+1] = "bp"
+				
+			elif move.flag == 3:
+				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.endRow][move.endCol] = move.pieceCaptured
+				self.board[move.startRow][move.startCol-1] = "wp"
+			
+			elif move.flag == 4:
+				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.endRow][move.endCol] = move.pieceCaptured
+				self.board[move.startRow][move.startCol+1] = "wp"		
+				
+			
 			self.whiteMove = not self.whiteMove
 			
 			#update king
@@ -164,14 +217,16 @@ class GameState():
 				if c+1 <= 7: #capture to right
 					if self.board[r-1][c+1][0] == 'b':
 						moves.append(Move((r, c), (r-1, c+1), self.board, 0))	
-				#en-passant
+				#en-passant 
 				if len(self.moveLog) != 0:
 					lastMove = self.moveLog[len(self.moveLog)-1]
 					if lastMove.pieceMoved == 'bp' and lastMove.endRow - lastMove.startRow == 2:
-						if r == lastMove.endRow and (c-1 == lastMove.endCol or c+1 == lastMove.endCol):
-							'''add flag bit to moves
-							'''
-							pass
+						if r == lastMove.endRow:
+							if c-1 == lastMove.endCol and self.board[r-1][c-1][0] != 'w':
+								moves.append(Move((r, c), (r-1, c-1), self.board, 1))
+							if c+1 == lastMove.endCol and self.board[r-1][c+1][0] != 'w':
+								moves.append(Move((r, c), (r-1, c+1), self.board, 2))
+							
 				
 			#black pawn moves			
 			else:
@@ -187,6 +242,15 @@ class GameState():
 				if c+1 <= 7: #capture to right
 					if self.board[r+1][c+1][0] == 'w':
 						moves.append(Move((r, c), (r+1, c+1), self.board, 0))
+				#en-passant 
+				if len(self.moveLog) != 0:
+					lastMove = self.moveLog[len(self.moveLog)-1]
+					if lastMove.pieceMoved == 'wp' and lastMove.startRow - lastMove.endRow == 2:
+						if r == lastMove.endRow:
+							if c-1 == lastMove.endCol and self.board[r+1][c-1][0] != allyColor:
+								moves.append(Move((r, c), (r+1, c-1), self.board, 3))
+							if c+1 == lastMove.endCol and self.board[r+1][c+1][0] != allyColor:
+								moves.append(Move((r, c), (r+1, c+1), self.board, 4))
 						
 		#KNIGHT MOVEMENT
 		elif piece == 'n':

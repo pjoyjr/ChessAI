@@ -55,27 +55,29 @@ def main():
 				else: #clicked a new square
 					sqSelected = (row, col)
 					playerClicks.append(sqSelected)
-					
-				if len(playerClicks) == 2:
-					move = Move(playerClicks[0], playerClicks[1], gs.board, 0)
-					foundMove = False
-					for moves in validMoves:
-						if move.moveID == moves.moveID:
-							gs.makeMove(moves)
-							moveMade = True
-							foundMove = True
-							sqSelected = ()
-							playerClicks = []
-				if foundMove is not True:
-					playerClicks = [sqSelected]
-					foundMove = False
+	
+					if len(playerClicks) == 2:
+						move = Move(playerClicks[0], playerClicks[1], gs.board, 0)
+						foundMove = False
+						for moves in validMoves:
+							if move.moveID == moves.moveID:
+								gs.makeMove(moves)
+								moveMade = True
+								foundMove = True
+								sqSelected = ()
+								playerClicks = []
+					if foundMove is not True:
+						playerClicks = [sqSelected]
+						foundMove = False
 					
 			#key handler
 			elif e.type == p.KEYDOWN:
 				if e.key == p.K_z: #undo when z is pressed
 					gs.undoMove()
+					#AI needs 1 more
+					#gs.undoMove()
 					moveMade = True
-					
+		
 		if moveMade:
 			validMoves = gs.getValidMoves()
 			moveMade = False
@@ -100,19 +102,23 @@ def main():
 					sys.stdout.write("Check!\n")
 					sys.stdout.flush()
 		
-		#AI PLAYING?
+		#AI PLAYING
+		'''
 		if gs.whiteMove == False:
 			gs.AI(validMoves)
 			moveMade = True
+		'''
 		
-		drawGame(screen, gs, sqSelected, validMoves)
+		drawGame(screen, gs, sqSelected)
 		clock.tick(FPS)
 		p.display.flip()
 		
 		
-def drawGame(screen, gs, attackPiece, validMoves):
+def drawGame(screen, gs, attackPiece):
 	drawSquares(screen) #draw squares on board
-	drawHighlightMoves(screen, gs, attackPiece, validMoves)
+	if len(gs.moveLog) != 0:
+		drawLastMove(screen, gs)
+	drawHighlightMoves(screen, gs, attackPiece)
 	drawLines(screen)
 	drawPieces(screen, gs.board) #draw pieces on top of squares
 	
@@ -122,8 +128,15 @@ def drawSquares(screen):
 		for col in range(DIM):
 				color = colors[((col+row)%2)]
 				p.draw.rect(screen, color, p.Rect(col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
+def drawLastMove(screen, gs):
+		color = p.Color("red")
+		lastMove = gs.moveLog[len(gs.moveLog)-1]
+		p.draw.rect(screen, color, p.Rect(lastMove.startCol*SQ_SIZE, lastMove.startRow*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+		p.draw.rect(screen, color, p.Rect(lastMove.endCol*SQ_SIZE, lastMove.endRow*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 				
-def drawHighlightMoves(screen, gs, attackPiece, validMoves):
+def drawHighlightMoves(screen, gs, attackPiece):
+	validMoves = gs.getValidMoves()
 	if str(attackPiece) != '()':
 		color = p.Color("palegoldenrod")
 		for move in validMoves:
