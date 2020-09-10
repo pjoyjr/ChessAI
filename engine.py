@@ -150,33 +150,43 @@ class GameState():
 		
 		#PAWN MOVEMENT
 		if piece == 'p':
-			if allyColor == "w": #white pawn moves
+			#white pawn moves
+			if allyColor == "w":
 				#move forward
 				if self.board[r-1][c] == "-":
-					moves.append(Move((r, c), (r-1, c), self.board))
+					moves.append(Move((r, c), (r-1, c), self.board, 0))
 					if r == 6 and self.board[r-2][c] == "-":
-						moves.append(Move((r, c), (r-2, c), self.board))
+						moves.append(Move((r, c), (r-2, c), self.board, 0))
 				#capture enemy piece
 				if c-1 >= 0: #capture to left
 					if self.board[r-1][c-1][0] == 'b':
-						moves.append(Move((r, c), (r-1, c-1), self.board))
+						moves.append(Move((r, c), (r-1, c-1), self.board, 0))
 				if c+1 <= 7: #capture to right
 					if self.board[r-1][c+1][0] == 'b':
-						moves.append(Move((r, c), (r-1, c+1), self.board))	
-						
-			else: #black pawn moves
+						moves.append(Move((r, c), (r-1, c+1), self.board, 0))	
+				#en-passant
+				if len(self.moveLog) != 0:
+					lastMove = self.moveLog[len(self.moveLog)-1]
+					if lastMove.pieceMoved == 'bp' and lastMove.endRow - lastMove.startRow == 2:
+						if r == lastMove.endRow and (c-1 == lastMove.endCol or c+1 == lastMove.endCol):
+							'''add flag bit to moves
+							'''
+							pass
+				
+			#black pawn moves			
+			else:
 				#move forwards
 				if self.board[r+1][c] == "-":
-					moves.append(Move((r, c), (r+1, c), self.board))
+					moves.append(Move((r, c), (r+1, c), self.board, 0))
 					if r == 1 and self.board[r+2][c] == "-":
-						moves.append(Move((r, c), (r+2, c), self.board))
+						moves.append(Move((r, c), (r+2, c), self.board, 0))
 				#capture enemy piece		
 				if c-1 >= 0: #capture to left
 					if self.board[r+1][c-1][0] == 'w':
-						moves.append(Move((r, c), (r+1, c-1), self.board))
+						moves.append(Move((r, c), (r+1, c-1), self.board, 0))
 				if c+1 <= 7: #capture to right
 					if self.board[r+1][c+1][0] == 'w':
-						moves.append(Move((r, c), (r+1, c+1), self.board))
+						moves.append(Move((r, c), (r+1, c+1), self.board, 0))
 						
 		#KNIGHT MOVEMENT
 		elif piece == 'n':
@@ -187,7 +197,7 @@ class GameState():
 				if 0 <= endRow < 8 and 0 <= endCol < 8:
 					endPiece = self.board[endRow][endCol]
 					if endPiece[0] != allyColor: #empty or enemy piece
-						moves.append(Move((r, c), (endRow, endCol), self.board))
+						moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 						
 		#KING MOVEMENT
 		elif piece == 'k':
@@ -198,7 +208,7 @@ class GameState():
 				if 0 <= endRow < 8 and 0 <= endCol < 8:
 					endPiece = self.board[endRow][endCol]
 					if endPiece[0] != allyColor: #empty or enemy space
-						moves.append(Move((r, c), (endRow, endCol), self.board))
+						moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 						
 		#BISHOP/QUEEN MOVEMENT
 		if piece == 'b' or piece == 'q':
@@ -210,9 +220,9 @@ class GameState():
 					if 0 <= endRow < 8 and 0 <= endCol < 8:
 						endPiece = self.board[endRow][endCol]
 						if endPiece == "-":
-							moves.append(Move((r, c), (endRow, endCol), self.board))
+							moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 						elif endPiece[0] == enemyColor:
-							moves.append(Move((r, c), (endRow, endCol), self.board))
+							moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 							break;
 						else: #friendly piece
 							break
@@ -229,9 +239,9 @@ class GameState():
 					if 0 <= endRow < 8 and  0 <= endCol < 8: #on board
 						endPiece = self.board[endRow][endCol]
 						if endPiece == "-": #open spot
-							moves.append(Move((r, c), (endRow, endCol), self.board))
+							moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 						elif endPiece[0] == enemyColor: #enemy spot
-							moves.append(Move((r, c), (endRow, endCol), self.board))
+							moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 							break
 						else: #friendly piece
 							break

@@ -33,6 +33,7 @@ def main():
 	#flag variables
 	running = True
 	moveMade = False
+	foundMove = False
 	
 	#coord variables
 	sqSelected = () #holds coord of last click of user (tuple: row, col)
@@ -56,14 +57,18 @@ def main():
 					playerClicks.append(sqSelected)
 					
 				if len(playerClicks) == 2:
-					move = Move(playerClicks[0], playerClicks[1], gs.board)
-					if move in validMoves:
-						gs.makeMove(move)
-						moveMade = True
-						sqSelected =()
-						playerClicks = []
-					else:
-						playerClicks = [sqSelected]
+					move = Move(playerClicks[0], playerClicks[1], gs.board, 0)
+					foundMove = False
+					for moves in validMoves:
+						if move.moveID == moves.moveID:
+							gs.makeMove(moves)
+							moveMade = True
+							foundMove = True
+							sqSelected = ()
+							playerClicks = []
+				if foundMove is not True:
+					playerClicks = [sqSelected]
+					foundMove = False
 					
 			#key handler
 			elif e.type == p.KEYDOWN:
