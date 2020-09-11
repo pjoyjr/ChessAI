@@ -11,6 +11,9 @@ FPS = 18
 IMAGES = {}
 
 
+ONOFFAI = False # TRUE = ON, FALSE = OFF
+
+
 def loadImages():
 	pieces = ['bp', 'br', 'bn', 'bb', 'bq', 'bk', 'wp', 'wr', 'wn', 'wb', 'wq', 'wk']
 	for piece in pieces:
@@ -66,7 +69,7 @@ def main():
 								foundMove = True
 								sqSelected = ()
 								playerClicks = []
-					if foundMove is not True:
+					if foundMove is False:
 						playerClicks = [sqSelected]
 						foundMove = False
 					
@@ -74,8 +77,10 @@ def main():
 			elif e.type == p.KEYDOWN:
 				if e.key == p.K_z: #undo when z is pressed
 					gs.undoMove()
-					#AI needs 1 more
-					#gs.undoMove()
+					
+					if ONOFFAI:
+						gs.undoMove()
+						
 					moveMade = True
 		
 		if moveMade:
@@ -103,11 +108,10 @@ def main():
 					sys.stdout.flush()
 		
 		#AI PLAYING
-		'''
-		if gs.whiteMove == False:
-			gs.AI(validMoves)
-			moveMade = True
-		'''
+		if ONOFFAI:
+			if gs.whiteMove == False:
+				gs.AI(validMoves)
+				moveMade = True
 		
 		drawGame(screen, gs, sqSelected)
 		clock.tick(FPS)

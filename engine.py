@@ -17,9 +17,10 @@ class GameState():
 		
 		#variables for castling
 		self.whiteKingMoved = False
-		self.blackKingMoved =  False
 		self.leftWhiteRookMoved = False
 		self.rightWhiteRookMoved = False
+		
+		self.blackKingMoved =  False
 		self.leftBlackRookMoved = False
 		self.rightBlackRookMoved = False
 		
@@ -32,43 +33,56 @@ class GameState():
 		self.blackKingLoc = (0, 4)
 		
 
-		
 	'''
-	flag bit notation: 
-	0 = normal move
-	1 = white en passant left
-	2 = white en passant right
-	3 = white en passant left
-	4 = white en passant left
-	5 = white castle left
-	6 = white castle right
-	7 = black castle left
-	8 = black castle right
-	
-	not valid for castling
-	
 	NEED TO WRITE A CHESS NOTATION
 	'''
+
 	def makeMove(self, move):
-		if move.flag == 0:
+		if move.flag == 0 or move.flag == 5 or move.flag == 6 or move.flag == 7: #flag 0 = normal move, white rook left moved
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
-		elif move.flag == 1:
-			self.board[move.startRow][move.startCol] = "-"
-			self.board[move.startRow][move.startCol-1] = "-"
-			self.board[move.endRow][move.endCol] = move.pieceMoved
-		elif move.flag == 2:
-			self.board[move.startRow][move.startCol] = "-"
-			self.board[move.startRow][move.startCol+1] = "-"
-			self.board[move.endRow][move.endCol] = move.pieceMoved
-		elif move.flag == 3:
+		
+		#EN PASSANT
+		elif move.flag == 1: #flag 1 = white en passant left
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.startRow][move.startCol-1] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
-		elif move.flag == 4:
+		elif move.flag == 2: #flag 2 = white en passant right
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.startRow][move.startCol+1] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
+		elif move.flag == 3: #flag 3 = white en passant left
+			self.board[move.startRow][move.startCol] = "-"
+			self.board[move.startRow][move.startCol-1] = "-"
+			self.board[move.endRow][move.endCol] = move.pieceMoved
+		elif move.flag == 4: #flag 4 = white en passant left
+			self.board[move.startRow][move.startCol] = "-"
+			self.board[move.startRow][move.startCol+1] = "-"
+			self.board[move.endRow][move.endCol] = move.pieceMoved
+		elif move.flag == 8: #flag 8 = white castle left
+			self.board[move.startRow][move.startCol] = "-"
+			self.board[move.endRow][move.endCol] = move.pieceMoved
+			self.board[7][0] = "-"
+			self.board[7][3] = "wr"
+		elif move.flag == 9: #flag 9 = white castle right
+			self.board[move.startRow][move.startCol] = "-"
+			self.board[move.endRow][move.endCol] = move.pieceMoved
+			self.board[7][7] = "-"
+			self.board[7][5] = "wr"
+		
+		#WHITE CASTLING
+		if move.flag == 5: #flag 5 = white rook left first move
+			self.leftWhiteRookMoved = True
+		elif move.flag == 6: #flag 6 = white rook right first move
+			self.rightWhiteRookMoved = True
+		elif move.flag == 7 or move.flag == 8 or move.flag == 9: #flag 7 = white king first moved or castled
+			self.whiteKingMoved = True
+		
+		#flag 10 = black rook left moved
+		#flag 11 = black rook right moved
+		#flag 12 = black king moved
+		#flag 13 = black castle left
+		#flag 14 = black castle right
 		
 		self.moveLog.append(move) #log move so we can undo
 		self.whiteMove = not self.whiteMove #switch players
@@ -99,38 +113,55 @@ class GameState():
 	def undoMove(self):
 		if(len(self.moveLog) != 0):
 			move = self.moveLog.pop()
-			if move.flag == 0:
+			if move.flag == 0 or move.flag == 5 or move.flag == 6 or move.flag == 7:
 				self.board[move.startRow][move.startCol] = move.pieceMoved
 				self.board[move.endRow][move.endCol] = move.pieceCaptured
 			
+			#EN PASSANT
 			elif move.flag == 1:
 				self.board[move.startRow][move.startCol] = move.pieceMoved
 				self.board[move.endRow][move.endCol] = move.pieceCaptured
 				self.board[move.startRow][move.startCol-1] = "bp"
-			
 			elif move.flag == 2:
 				self.board[move.startRow][move.startCol] = move.pieceMoved
 				self.board[move.endRow][move.endCol] = move.pieceCaptured
 				self.board[move.startRow][move.startCol+1] = "bp"
-				
 			elif move.flag == 3:
 				self.board[move.startRow][move.startCol] = move.pieceMoved
 				self.board[move.endRow][move.endCol] = move.pieceCaptured
 				self.board[move.startRow][move.startCol-1] = "wp"
-			
 			elif move.flag == 4:
 				self.board[move.startRow][move.startCol] = move.pieceMoved
 				self.board[move.endRow][move.endCol] = move.pieceCaptured
-				self.board[move.startRow][move.startCol+1] = "wp"		
-				
+				self.board[move.startRow][move.startCol+1] = "wp"
 			
-			self.whiteMove = not self.whiteMove
+			#WHITE CASTLING
+			elif move.flag == 8:
+				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.endRow][move.endCol] = "-"
+				self.board[7][0] = "wr"
+				self.board[7][3] = "-"
+			elif move.flag == 9:
+				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.endRow][move.endCol] = "-"
+				self.board[7][7] = "wr"
+				self.board[7][5] = "-"
+				
+			if move.flag == 5:
+				self.leftWhiteRookMoved = False
+			if move.flag == 6:
+				self.rightWhiteRookMoved = False
+			if move.flag == 7 or move.flag == 8 or move.flag == 9:
+				self.whiteKingMoved = False
+				
 			
 			#update king
 			if move.pieceMoved == 'wk':
 				self.whiteKingLoc = (move.startRow, move.startCol)
 			if move.pieceMoved == 'bk':
 				self.blackKingLoc = (move.startRow, move.startCol)
+				
+			self.whiteMove = not self.whiteMove
 			
 	def getValidMoves(self):
 		#1. generate all possible moves
@@ -266,13 +297,22 @@ class GameState():
 		#KING MOVEMENT
 		elif piece == 'k':
 			directions = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
+			pieceNameColor = allyColor + piece
 			for i in range(8):
 				endRow = r + directions[i][0]
 				endCol = c + directions[i][1]
 				if 0 <= endRow < 8 and 0 <= endCol < 8:
 					endPiece = self.board[endRow][endCol]
 					if endPiece[0] != allyColor: #empty or enemy space
-						moves.append(Move((r, c), (endRow, endCol), self.board, 0))
+						if self.whiteKingMoved == False and pieceNameColor == "wk":
+							moves.append(Move((r, c), (endRow, endCol), self.board, 7))
+						else:
+							moves.append(Move((r, c), (endRow, endCol), self.board, 0))
+			#WHITE CASTLING
+			if pieceNameColor == "wk" and self.whiteKingMoved == False and self.leftWhiteRookMoved == False and self.board[7][1] == '-' and self.board[7][2] == '-' and self.board[7][3] == '-':
+				moves.append(Move((r, c), (7, 2), self.board, 8))
+			if pieceNameColor == "wk" and self.whiteKingMoved == False and self.rightWhiteRookMoved == False and self.board[7][5] == '-' and self.board[7][6] == '-':
+				moves.append(Move((r, c), (7, 6), self.board, 9))
 						
 		#BISHOP/QUEEN MOVEMENT
 		if piece == 'b' or piece == 'q':
@@ -295,6 +335,7 @@ class GameState():
 						
 		#ROOK/QUEEN MOVEMENT
 		if piece == 'r' or piece == 'q':
+			pieceNameColor = allyColor + piece
 			directions = ((-1, 0), (0, -1), (1, 0), (0, 1)) #up, left, down, right
 			for d in directions:
 				for i in range(1, 8):
@@ -303,9 +344,19 @@ class GameState():
 					if 0 <= endRow < 8 and  0 <= endCol < 8: #on board
 						endPiece = self.board[endRow][endCol]
 						if endPiece == "-": #open spot
-							moves.append(Move((r, c), (endRow, endCol), self.board, 0))
+							if pieceNameColor == "wr" and self.leftWhiteRookMoved == False and r == 7 and c == 0:
+								moves.append(Move((r, c), (endRow, endCol), self.board, 5))
+							elif pieceNameColor == "wr" and self.rightWhiteRookMoved == False and r == 7 and c == 7:
+								moves.append(Move((r, c), (endRow, endCol), self.board, 6))
+							else:
+								moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 						elif endPiece[0] == enemyColor: #enemy spot
-							moves.append(Move((r, c), (endRow, endCol), self.board, 0))
+							if pieceNameColor == "wr" and self.leftWhiteRookMoved == False and r == 7 and c == 0:
+								moves.append(Move((r, c), (endRow, endCol), self.board, 5))
+							elif pieceNameColor == "wr" and self.rightWhiteRookMoved == False and r == 7 and c == 7:
+								moves.append(Move((r, c), (endRow, endCol), self.board, 6))
+							else:
+								moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 							break
 						else: #friendly piece
 							break
