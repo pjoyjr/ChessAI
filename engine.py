@@ -15,6 +15,10 @@ class GameState():
 			["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
 			["wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"]]
 		
+		self.rowNotation = ["8", "7", "6", "5", "4", "3", "2", "1"]
+		self.colNotation = ["a", "b", "c", "d", "e", "f", "g", "h"]
+		self.notationLog = []
+		
 		#variables for castling
 		self.whiteKingMoved = False
 		self.leftWhiteRookMoved = False
@@ -38,49 +42,100 @@ class GameState():
 	'''
 
 	def makeMove(self, move):
+		notation = "Null"
 		#EN PASSANT
 		if move.flag == 1: #flag 1 = white en passant left
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.startRow][move.startCol-1] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
+			
+			startCol = self.colNotation[move.startCol]
+			endRow = self.rowNotation[move.endRow]
+			endCol = self.colNotation[move.endCol]
+			notation = startCol + "x"  + endCol + endRow
+			
 		elif move.flag == 2: #flag 2 = white en passant right
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.startRow][move.startCol+1] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
-		elif move.flag == 3: #flag 3 = white en passant left
+			
+			startCol = self.colNotation[move.startCol]
+			endRow = self.rowNotation[move.endRow]
+			endCol = self.colNotation[move.endCol]
+			notation = startCol + "x" + endCol + endRow
+			
+		elif move.flag == 3: #flag 3 = black en passant left
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.startRow][move.startCol-1] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
-		elif move.flag == 4: #flag 4 = white en passant left
+			
+			startCol = self.colNotation[move.startCol]
+			endRow = self.rowNotation[move.endRow]
+			endCol = self.colNotation[move.endCol]
+			notation = startCol + "x" + endCol + endRow 
+			
+		elif move.flag == 4: #flag 4 = black en passant right
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.startRow][move.startCol+1] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
+			
+			startCol = self.colNotation[move.startCol]
+			endRow = self.rowNotation[move.endRow]
+			endCol = self.colNotation[move.endCol]
+			notation = startCol + "x" + endCol + endRow 
+			
 		#WHITE CASTLING
 		elif move.flag == 8: #flag 8 = white castle left
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
 			self.board[7][0] = "-"
 			self.board[7][3] = "wr"
+			
+			notation = "O-O-O"
+			
 		elif move.flag == 9: #flag 9 = white castle right
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
 			self.board[7][7] = "-"
 			self.board[7][5] = "wr"
+			
+			notation = "O-O"
+			
 		#BLACK CASTLING
-		elif move.flag == 13: #flag 13 = white castle left
+		elif move.flag == 13: #flag 13 = black castle left
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
 			self.board[0][0] = "-"
 			self.board[0][3] = "br"
-		elif move.flag == 14: #flag 14 = white castle right
+			
+			notation = "O-O-O"
+			
+		elif move.flag == 14: #flag 14 = black castle right
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
 			self.board[0][7] = "-"
 			self.board[0][5] = "br"
+			
+			notation = "O-O"
 		
 		else:
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
+			
+			#CHESS NOTATION
+			startRow = self.rowNotation[move.startRow]
+			startCol = self.colNotation[move.startCol]
+			endRow = self.rowNotation[move.endRow]
+			endCol = self.colNotation[move.endCol]
+			pieceCaptured = False if move.pieceCaptured == "-" else True
+			
+			
+			if move.pieceMoved[1] == "p":
+				if pieceCaptured:
+					notation = startCol + 'x' + endCol + endRow
+				else:
+					notation = endCol + endRow
+				
 		
 		#WHITE CASTLING
 		if move.flag == 5: #flag 5 = white rook left first move
@@ -98,8 +153,10 @@ class GameState():
 			self.blackKingMoved = True
 				
 		self.moveLog.append(move) #log move so we can undo
+		self.notationLog.append(notation)
 		self.whiteMove = not self.whiteMove #switch players
 		
+		'''
 		#check rooks for castling
 		if move.startRow == 0:
 			if move.startCol == 0:
@@ -111,6 +168,7 @@ class GameState():
 				self.leftWhiteRookMoved = True
 			elif move.startCol == 7:
 				self.rightWhiteRookMoved = True
+		'''
 		
 		#update king
 		if move.pieceMoved == 'wk':
@@ -126,6 +184,7 @@ class GameState():
 	def undoMove(self):
 		if(len(self.moveLog) != 0):
 			move = self.moveLog.pop()
+			self.notationLog.pop()
 						
 			#EN PASSANT
 			if move.flag == 1:
@@ -417,11 +476,20 @@ class GameState():
 	def writeResults(self, winner):
 		fname = 'gameHistory.py'
 		with open(fname, 'a') as f:
-			f.write('game = [{}, {}]'.format(winner, self.moveLog))
+			f.write('game = [{}, {}]'.format(winner, self.notationLog))
 			f.write("\n")
 
 	#if color = a AI vs AI, color = w W vs AI, color = b B vs AI		
 	def AI(self, moves):
-		rNum = random.randint(0,len(moves)-1)
-		self.makeMove(moves[rNum])
+		randomMove = True
+		for move in moves:
+			if move.pieceCaptured != '-' and randomMove == True:
+				self.makeMove(move)
+				randomMove = False
+			elif self.squareUnderAttack(move.startRow, move.startCol) and randomMove == True:
+				self.makeMove(move)
+				randomMove = False
+		if randomMove:	
+			rNum = random.randint(0,len(moves)-1)
+			self.makeMove(moves[rNum])
 		

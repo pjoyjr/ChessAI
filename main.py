@@ -11,7 +11,10 @@ FPS = 18
 IMAGES = {}
 
 
-ONOFFAI = False # TRUE = ON, FALSE = OFF
+AIPLAYER = False
+WHITEAI = False
+BLACKAI = True
+SLEEPTIME = 2
 
 
 def loadImages():
@@ -75,25 +78,36 @@ def main():
 					
 			#key handler
 			elif e.type == p.KEYDOWN:
-				if e.key == p.K_z: #undo when z is pressed
+				if e.key == p.K_z and AIPLAYER: #undo when z is pressed
 					gs.undoMove()
-					
-					if ONOFFAI:
-						gs.undoMove()
-						
+					gs.undoMove()					
 					moveMade = True
+				if e.key == p.K_x and AIPLAYER:
+					gs.undoMove()					
+					moveMade = True
+				if e.key == p.K_z and AIPLAYER == False: #undo when x is pressed
+					gs.undoMove()
+					moveMade = True
+				
 		
 		if moveMade:
+			sys.stdout.write(str(gs.notationLog)+"\n")
+			sys.stdout.flush()
 			validMoves = gs.getValidMoves()
 			moveMade = False
 			
 			#check for CHECK/CHECKMATE/STALEMATE
 			if len(validMoves) == 0:
-				winner = 't'
+				winner = 'Tie'
 				if gs.checkmate:
-					winner = 'b' if gs.whiteMove else 'w'
-					sys.stdout.write("{} wins by Checkmate!\n".format(winner))
-					sys.stdout.flush()
+					if gs.whiteMove:
+						winner = 'b'
+						sys.stdout.write("Black wins by Checkmate!\n")
+						sys.stdout.flush()
+					else:
+						winner = 'w'
+						sys.stdout.write("White wins by Checkmate!\n")
+						sys.stdout.flush()
 				elif gs.stalemate:
 					sys.stdout.write("Stalemate!\n")
 					sys.stdout.flush()
@@ -108,8 +122,13 @@ def main():
 					sys.stdout.flush()
 		
 		#AI PLAYING
-		if ONOFFAI:
-			if gs.whiteMove == False:
+		if AIPLAYER:
+			if gs.whiteMove == False and BLACKAI:
+				time.sleep(SLEEPTIME)
+				gs.AI(validMoves)
+				moveMade = True
+			elif gs.whiteMove == True and WHITEAI:
+				time.sleep(SLEEPTIME)
 				gs.AI(validMoves)
 				moveMade = True
 		
@@ -124,6 +143,7 @@ def drawGame(screen, gs, attackPiece):
 		drawLastMove(screen, gs)
 	drawHighlightMoves(screen, gs, attackPiece)
 	drawLines(screen)
+	drawLettersNumbers(screen, gs)
 	drawPieces(screen, gs.board) #draw pieces on top of squares
 	
 def drawSquares(screen):
@@ -132,7 +152,9 @@ def drawSquares(screen):
 		for col in range(DIM):
 				color = colors[((col+row)%2)]
 				p.draw.rect(screen, color, p.Rect(col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+				
 
+				
 def drawLastMove(screen, gs):
 		color = p.Color("red")
 		lastMove = gs.moveLog[len(gs.moveLog)-1]
@@ -153,7 +175,18 @@ def drawLines(screen):
 		for col in range(1,DIM):
 				p.draw.line(screen, color, (col*SQ_SIZE, 0), (col*SQ_SIZE, WIDTH), 2)
 				p.draw.line(screen, color, (0, row*SQ_SIZE), (HEIGHT, row*SQ_SIZE), 2)
+
+def drawLettersNumbers(screen, gs):
+	for row in range(0,DIM):
+		font = p.font.SysFont(None, 22)
+		text = font.render(gs.rowNotation[row], True, p.Color("black"))
+		screen.blit(text, (0, row*SQ_SIZE+5))
 	
+	for col in range(0,DIM):
+		font = p.font.SysFont(None, 22)
+		text = font.render(gs.colNotation[col], True, p.Color("black"))
+		screen.blit(text, (col*SQ_SIZE+2, WIDTH-15))
+
 def drawPieces(screen, board):
 	for row in range(DIM):
 		for col in range(DIM):
