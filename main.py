@@ -98,28 +98,19 @@ def main():
 			
 			#check for CHECK/CHECKMATE/STALEMATE
 			if len(validMoves) == 0:
-				winner = 'Tie'
+				notation = ''
 				if gs.checkmate:
 					if gs.whiteMove:
-						winner = 'b'
-						sys.stdout.write("Black wins by Checkmate!\n")
-						sys.stdout.flush()
+						notation = '0-1'
 					else:
-						winner = 'w'
-						sys.stdout.write("White wins by Checkmate!\n")
-						sys.stdout.flush()
+						notation = '1-0'
 				elif gs.stalemate:
-					sys.stdout.write("Stalemate!\n")
-					sys.stdout.flush()
-				gs.writeResults(winner)
+					notation = '.5-.5'
+				gs.notationLog.append(notation)
+				sys.stdout.write(str(gs.notationLog)+"\n")
 				del gs
 				gs = GameState()
 				validMoves = gs.getValidMoves()
-					
-			else:
-				if gs.inCheck():
-					sys.stdout.write("Check!\n")
-					sys.stdout.flush()
 		
 		#AI PLAYING
 		if AIPLAYER:
@@ -147,7 +138,7 @@ def drawGame(screen, gs, attackPiece):
 	drawPieces(screen, gs.board) #draw pieces on top of squares
 	
 def drawSquares(screen):
-	colors = [p.Color("tan1"), p.Color("rosybrown2")]
+	colors = [p.Color("lightsalmon"), p.Color("plum")]
 	for row in range(DIM):
 		for col in range(DIM):
 				color = colors[((col+row)%2)]
@@ -156,10 +147,16 @@ def drawSquares(screen):
 
 				
 def drawLastMove(screen, gs):
-		color = p.Color("red")
+		colors = (p.Color("chartreuse"), p.Color("red"))
 		lastMove = gs.moveLog[len(gs.moveLog)-1]
-		p.draw.rect(screen, color, p.Rect(lastMove.startCol*SQ_SIZE, lastMove.startRow*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-		p.draw.rect(screen, color, p.Rect(lastMove.endCol*SQ_SIZE, lastMove.endRow*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+		p.draw.rect(screen, colors[0], p.Rect(lastMove.startCol*SQ_SIZE, lastMove.startRow*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+		p.draw.rect(screen, colors[0], p.Rect(lastMove.endCol*SQ_SIZE, lastMove.endRow*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+		if gs.inCheck():
+			if gs.whiteMove:
+				p.draw.rect(screen, colors[1], p.Rect(gs.whiteKingLoc[1]*SQ_SIZE, gs.whiteKingLoc[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+			else:
+				p.draw.rect(screen, colors[1], p.Rect(gs.blackKingLoc[1]*SQ_SIZE, gs.blackKingLoc[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+			
 				
 def drawHighlightMoves(screen, gs, attackPiece):
 	validMoves = gs.getValidMoves()

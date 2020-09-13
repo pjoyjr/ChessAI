@@ -129,46 +129,71 @@ class GameState():
 			endCol = self.colNotation[move.endCol]
 			pieceCaptured = False if move.pieceCaptured == "-" else True
 			
-			
+			#PAWN NOTATION
 			if move.pieceMoved[1] == "p":
+				#Regular notation	
 				if pieceCaptured:
 					notation = startCol + 'x' + endCol + endRow
 				else:
 					notation = endCol + endRow
+				#pawn promotion
+				if move.endRow == 7:
+					board[move.endRow][move.endCol] = 'bq'
+					if pieceCaptured:
+						notation = startCol + 'x' + endCol + endRow + '=Q'
+					else:
+						notation = endCol + endRow + '=Q'
+				elif move.endRow == 0:
+					board[move.endRow][move.endCol] = 'wq'
+					if pieceCaptured:
+						notation = startCol + 'x' + endCol + endRow + '=Q'
+					else:
+						notation = endCol + endRow + '=Q'
+					
+			#REGULAR KING NOTATION
+			elif move.pieceMoved[1] == "k":
+				if pieceCaptured:
+					notation = 'K' + startCol + 'x' + endCol + endRow
+				else:
+					notation = 'K' + endCol + endRow
+			
+			#REGULAR QUEEN NOTATION
+			elif move.pieceMoved[1] == "q":
+				if pieceCaptured:
+					notation = 'Qx' + endCol + endRow
+				else:
+					notation = 'Q' + endCol + endRow
+			
+			#REGULAR BISHOP NOTATION
+			elif move.pieceMoved[1] == "b":
+				if pieceCaptured:
+					notation = 'Bx' + endCol + endRow
+				else:
+					notation = 'B' + endCol + endRow
 				
+		
+		self.moveLog.append(move) #log move so we can undo
+		self.whiteMove = not self.whiteMove #switch players		
+		if self.inCheck():
+			notation = notation + "+"
+			self.notationLog.append(notation)
+		else:
+			self.notationLog.append(notation)
 		
 		#WHITE CASTLING
 		if move.flag == 5: #flag 5 = white rook left first move
 			self.leftWhiteRookMoved = True
 		elif move.flag == 6: #flag 6 = white rook right first move
 			self.rightWhiteRookMoved = True
-		elif move.flag == 7 or move.flag == 8 or move.flag == 9: #flag 7 = white king first moved or castled
+		elif move.flag == 7 or move.flag == 8 or move.flag == 9: #flag 7,8,9 = white king first moved or castled
 			self.whiteKingMoved = True
 		#BLACK CASTLING
 		elif move.flag == 10: #flag 10 = black rook left first move
 			self.leftBlackRookMoved = True
 		elif move.flag == 11: #flag 11 = black rook right first move
 			self.rightBlackRookMoved = True
-		elif move.flag == 12 or move.flag == 13 or move.flag == 14: #flag 7 = white king first moved or castled
+		elif move.flag == 12 or move.flag == 13 or move.flag == 14: #flag 12,13,14 = black king first moved or castled
 			self.blackKingMoved = True
-				
-		self.moveLog.append(move) #log move so we can undo
-		self.notationLog.append(notation)
-		self.whiteMove = not self.whiteMove #switch players
-		
-		'''
-		#check rooks for castling
-		if move.startRow == 0:
-			if move.startCol == 0:
-				self.leftBlackRookMoved = True
-			elif move.startCol == 7:
-				self.rightBlackRookMoved = True
-		elif move.startRow == 7:
-			if move.startCol == 0:
-				self.leftWhiteRookMoved = True
-			elif move.startCol == 7:
-				self.rightWhiteRookMoved = True
-		'''
 		
 		#update king
 		if move.pieceMoved == 'wk':
@@ -177,8 +202,8 @@ class GameState():
 		if move.pieceMoved == 'bk':
 			self.blackKingLoc = (move.endRow, move.endCol)
 			self.blackKingMoved =  True
-			
-		self.checkPromotions(self.board, move)
+		
+		
 	
 	
 	def undoMove(self):
@@ -307,16 +332,7 @@ class GameState():
 					piece = self.board[r][c][1]
 					self.getMoves(piece,r, c, moves)
 		return moves
-	
-	#pawn promotions
-	def checkPromotions(self, board, move):
-		if move.pieceMoved[1] == 'p':
-			if move.endRow == 7:
-				board[move.endRow][move.endCol] = 'bq'
-			if move.endRow == 0:
-				board[move.endRow][move.endCol] = 'wq'
 		
-	
 	#return all moves possible for such piece not checking for self check
 	def getMoves(self, piece, r, c, moves):
 		enemyColor = "b" if self.whiteMove else "w"
