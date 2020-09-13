@@ -67,7 +67,7 @@ def main():
 						foundMove = False
 						for moves in validMoves:
 							if move.moveID == moves.moveID:
-								gs.makeMove(moves)
+								gs.makeMove(moves, validMoves)
 								moveMade = True
 								foundMove = True
 								sqSelected = ()
@@ -98,6 +98,9 @@ def main():
 			
 			#check for CHECK/CHECKMATE/STALEMATE
 			if len(validMoves) == 0:
+				lastMove = gs.notationLog.pop()
+				lastMove = lastMove[0:len(lastMove)-1] + '#'
+				gs.notationLog.append(lastMove)
 				notation = ''
 				if gs.checkmate:
 					if gs.whiteMove:
@@ -108,6 +111,8 @@ def main():
 					notation = '.5-.5'
 				gs.notationLog.append(notation)
 				sys.stdout.write(str(gs.notationLog)+"\n")
+				sys.stdout.flush()
+				gs.writeResults()
 				del gs
 				gs = GameState()
 				validMoves = gs.getValidMoves()

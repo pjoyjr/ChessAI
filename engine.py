@@ -41,7 +41,7 @@ class GameState():
 	NEED TO WRITE A CHESS NOTATION
 	'''
 
-	def makeMove(self, move):
+	def makeMove(self, move, validMoves):
 		notation = "Null"
 		#EN PASSANT
 		if move.flag == 1: #flag 1 = white en passant left
@@ -150,30 +150,40 @@ class GameState():
 					else:
 						notation = endCol + endRow + '=Q'
 					
-			#REGULAR KING NOTATION
-			elif move.pieceMoved[1] == "k":
+			#REGULAR KING/QUEEN/BISHOP NOTATION
+			elif move.pieceMoved[1] == "k" or move.pieceMoved[1] == "q" or move.pieceMoved[1] == "b":
 				if pieceCaptured:
-					notation = 'K' + startCol + 'x' + endCol + endRow
+					notation = move.pieceMoved[1].upper() + 'x' + endCol + endRow
 				else:
-					notation = 'K' + endCol + endRow
+					notation = move.pieceMoved[1].upper() + endCol + endRow
 			
-			#REGULAR QUEEN NOTATION
-			elif move.pieceMoved[1] == "q":
-				if pieceCaptured:
-					notation = 'Qx' + endCol + endRow
-				else:
-					notation = 'Q' + endCol + endRow
-			
-			#REGULAR BISHOP NOTATION
-			elif move.pieceMoved[1] == "b":
-				if pieceCaptured:
-					notation = 'Bx' + endCol + endRow
-				else:
-					notation = 'B' + endCol + endRow
+			#REGULAR KNIGHT NOTATION
+			elif move.pieceMoved[1] == "n":
+				isAmbiguous = False
 				
+				if isAmbiguous:
+					pass
+				else:
+					if pieceCaptured:
+						notation = move.pieceMoved[1].upper() + 'x' + endCol + endRow
+					else:
+						notation = move.pieceMoved[1].upper() + endCol + endRow
+			
+			#REGULAR ROOK NOTATION
+			elif move.pieceMoved[1] == "r":
+				isAmbiguous = False
+				
+				if isAmbiguous:
+					pass
+				else:
+					if pieceCaptured:
+						notation = move.pieceMoved[1].upper() + 'x' + endCol + endRow
+					else:
+						notation = move.pieceMoved[1].upper() + endCol + endRow
 		
 		self.moveLog.append(move) #log move so we can undo
-		self.whiteMove = not self.whiteMove #switch players		
+		self.whiteMove = not self.whiteMove #switch players	
+		
 		if self.inCheck():
 			notation = notation + "+"
 			self.notationLog.append(notation)
@@ -284,7 +294,7 @@ class GameState():
 		#2. for each move, 
 		for i in range(len(moves)-1, -1, -1): #transverse list backwards so we can delete if need be safely
 			#3. generate all opponents moves
-			self.makeMove(moves[i])
+			self.makeMove(moves[i], moves)
 			#4. for each of opponents moves, see if they attack your king
 			self.whiteMove = not self.whiteMove
 			if self.inCheck():
@@ -489,23 +499,22 @@ class GameState():
 						break
 
 	#write results to file after game is over with move log and winner
-	def writeResults(self, winner):
+	def writeResults(self):
 		fname = 'gameHistory.py'
 		with open(fname, 'a') as f:
-			f.write('game = [{}, {}]'.format(winner, self.notationLog))
-			f.write("\n")
+			f.write('game = {}\n'.format(self.notationLog))
 
 	#if color = a AI vs AI, color = w W vs AI, color = b B vs AI		
 	def AI(self, moves):
 		randomMove = True
 		for move in moves:
 			if move.pieceCaptured != '-' and randomMove == True:
-				self.makeMove(move)
+				self.makeMove(move, moves)
 				randomMove = False
 			elif self.squareUnderAttack(move.startRow, move.startCol) and randomMove == True:
-				self.makeMove(move)
+				self.makeMove(move, moves)
 				randomMove = False
 		if randomMove:	
 			rNum = random.randint(0,len(moves)-1)
-			self.makeMove(moves[rNum])
+			self.makeMove(moves[rNum], moves)
 		
