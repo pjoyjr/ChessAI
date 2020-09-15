@@ -1,6 +1,7 @@
 from move import Move
 import random
 
+import sys
 
 class GameState():
 
@@ -37,9 +38,6 @@ class GameState():
 		self.blackKingLoc = (0, 4)
 		
 
-	'''
-	NEED TO WRITE A CHESS NOTATION
-	'''
 
 	def makeMove(self, move, validMoves):
 		notation = "Null"
@@ -138,13 +136,13 @@ class GameState():
 					notation = endCol + endRow
 				#pawn promotion
 				if move.endRow == 7:
-					board[move.endRow][move.endCol] = 'bq'
+					self.board[move.endRow][move.endCol] = 'bq'
 					if pieceCaptured:
 						notation = startCol + 'x' + endCol + endRow + '=Q'
 					else:
 						notation = endCol + endRow + '=Q'
 				elif move.endRow == 0:
-					board[move.endRow][move.endCol] = 'wq'
+					self.board[move.endRow][move.endCol] = 'wq'
 					if pieceCaptured:
 						notation = startCol + 'x' + endCol + endRow + '=Q'
 					else:
@@ -160,9 +158,24 @@ class GameState():
 			#REGULAR KNIGHT NOTATION
 			elif move.pieceMoved[1] == "n":
 				isAmbiguous = False
-				
+				isColAmbiguous = False
+				for checkMove in validMoves:
+					if move.moveID != checkMove.moveID and move.endRow == checkMove.endRow and move.endCol == checkMove.endCol and checkMove.pieceMoved[1] == "n":
+						isAmbiguous = True
+						if move.startCol == checkMove.startCol:
+							isColAmbiguous = True
+						
 				if isAmbiguous:
-					pass
+					if isColAmbiguous:
+						if pieceCaptured:
+							notation = move.pieceMoved[1].upper() + startRow + 'x' + endCol + endRow
+						else:
+							notation = move.pieceMoved[1].upper() + startRow + endCol + endRow
+					else:
+						if pieceCaptured:
+							notation = move.pieceMoved[1].upper() + startCol + 'x' + endCol + endRow
+						else:
+							notation = move.pieceMoved[1].upper() + startCol + endCol + endRow
 				else:
 					if pieceCaptured:
 						notation = move.pieceMoved[1].upper() + 'x' + endCol + endRow
@@ -172,9 +185,25 @@ class GameState():
 			#REGULAR ROOK NOTATION
 			elif move.pieceMoved[1] == "r":
 				isAmbiguous = False
-				
+				isColAmbiguous = False
+				for checkMove in validMoves:
+					if move.moveID != checkMove.moveID and move.endRow == checkMove.endRow and move.endCol == checkMove.endCol and checkMove.pieceMoved[1] == "r":
+						isAmbiguous = True
+						if move.startCol == checkMove.startCol:
+							isColAmbiguous = True
+						
 				if isAmbiguous:
-					pass
+					if isColAmbiguous:
+						if pieceCaptured:
+							notation = move.pieceMoved[1].upper() + startRow + 'x' + endCol + endRow
+						else:
+							notation = move.pieceMoved[1].upper() + startRow + endCol + endRow
+					else:
+						if pieceCaptured:
+							notation = move.pieceMoved[1].upper() + startCol + 'x' + endCol + endRow
+						else:
+							notation = move.pieceMoved[1].upper() + startCol + endCol + endRow
+							
 				else:
 					if pieceCaptured:
 						notation = move.pieceMoved[1].upper() + 'x' + endCol + endRow
@@ -212,9 +241,19 @@ class GameState():
 		if move.pieceMoved == 'bk':
 			self.blackKingLoc = (move.endRow, move.endCol)
 			self.blackKingMoved =  True
+			
+		'''
+		CHECK STALEMATE
+		#TRADITIONAL/NO MOVES AVALIABLE
+		#THREEFOLD REPETITION
+		#FIFTY-MOVE RULE
+		#Impossibility of checkmate
+			#K vs K
+			#K vs K,B
+			#K vs K,N
+			#K,B vs K,B (Bishops on same color)
+		'''
 		
-		
-	
 	
 	def undoMove(self):
 		if(len(self.moveLog) != 0):
@@ -312,6 +351,8 @@ class GameState():
 			
 		return moves
 	
+				
+			
 	
 	#check if current player is in check
 	def inCheck(self):
@@ -506,15 +547,40 @@ class GameState():
 
 	#if color = a AI vs AI, color = w W vs AI, color = b B vs AI		
 	def AI(self, moves):
-		randomMove = True
+		excellentMoves = []
+		greatMoves = []
+		goodMoves = []
+		
 		for move in moves:
-			if move.pieceCaptured != '-' and randomMove == True:
+			#see if you can check opponent
+			self.makeMove(move, moves)
+			if self.inCheck():
+				if not self.squareUnderAttack(move.startRow, move.startCol):
+					excellentMoves.append(move)
+			self.undoMove()
+			#check if can attack piece
+			if move.pieceCaptured != "-":
 				self.makeMove(move, moves)
-				randomMove = False
-			elif self.squareUnderAttack(move.startRow, move.startCol) and randomMove == True:
+				if not self.squareUnderAttack(move.startRow, move.startCol):
+					greatMoves.append(move)
+				self.undoMove()
+			#see if piece is under attack
+			if self.squareUnderAttack(move.startRow, move.startCol):
 				self.makeMove(move, moves)
-				randomMove = False
-		if randomMove:	
+				if not self.squareUnderAttack(move.startRow, move.startCol):
+					goodMoves.append(move)
+				self.undoMove()
+				
+		if len(excellentMoves) != 0:
+			rNum = random.randint(0,len(excellentMoves)-1)
+			self.makeMove(excellentMoves[rNum], moves)
+		elif len(greatMoves) != 0:
+			rNum = random.randint(0,len(greatMoves)-1)
+			self.makeMove(greatMoves[rNum], moves)
+		elif len(goodMoves) != 0:
+			rNum = random.randint(0,len(goodMoves)-1)
+			self.makeMove(goodMoves[rNum], moves)
+		else:
 			rNum = random.randint(0,len(moves)-1)
 			self.makeMove(moves[rNum], moves)
 		

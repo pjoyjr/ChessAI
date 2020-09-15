@@ -12,9 +12,9 @@ IMAGES = {}
 
 
 AIPLAYER = False
-WHITEAI = False
+WHITEAI = True
 BLACKAI = True
-SLEEPTIME = 2
+SLEEPTIME = 0
 
 
 def loadImages():
@@ -97,17 +97,16 @@ def main():
 			moveMade = False
 			
 			#check for CHECK/CHECKMATE/STALEMATE
-			if len(validMoves) == 0:
-				lastMove = gs.notationLog.pop()
-				lastMove = lastMove[0:len(lastMove)-1] + '#'
-				gs.notationLog.append(lastMove)
-				notation = ''
+			if len(validMoves) == 0 or gs.stalemate:
 				if gs.checkmate:
+					lastMove = gs.notationLog.pop()
+					lastMove = lastMove[0:len(lastMove)-1] + '#'
+					gs.notationLog.append(lastMove)
 					if gs.whiteMove:
 						notation = '0-1'
 					else:
 						notation = '1-0'
-				elif gs.stalemate:
+				else:
 					notation = '.5-.5'
 				gs.notationLog.append(notation)
 				sys.stdout.write(str(gs.notationLog)+"\n")
