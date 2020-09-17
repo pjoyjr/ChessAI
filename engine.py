@@ -348,17 +348,58 @@ class GameState():
 	'''		
 	#
 	def isStalemate(self):
-		kingStalemate = True
+		oneKnight = False
+		
+		oneWhiteBishop = False
+		whiteBishopOddLocation = False
+		whiteBishopEvenLocation = False
+		
+		oneBlackBishop = False
+		blackBishopOddLocation = False
+		blackBishopEvenLocation = False
+		
 		#Impossibility of checkmate
 		#K vs K
-		for row in range(0,7):
-			for col in range(0,7):
-				if self.board[row][col] != '-' and self.board[row][col] != 'wk' and self.board[row][col] != 'bk':
-					kingStalemate = False
-		return kingStalemate
+		for row in range(0,8):
+			for col in range(0,8):
+				if self.board[row][col] != '-':
+				
+					#IF ANYTHING OTHER THAN KING/BISHOP/KNIGHT
+					if self.board[row][col][1] != 'k' and self.board[row][col][1] != 'b' and self.board[row][col][1] != 'n':
+						return False
+					
+					#K vs K,N
+					elif self.board[row][col][1] == 'n' and oneKnight:
+						return False
+					elif self.board[row][col][1] == 'n':
+						oneKnight = True
+						
+					#K vs K,B
+					elif self.board[row][col] == 'wb':
+						if oneWhiteBishop == True:
+							return False
+						elif oneWhiteBishop == False:
+							oneWhiteBishop = True
+							if ((col+row)%2) == 0:
+								whiteBishopEvenLocation = True
+							else:
+								whiteBishopOddLocation = True
+						
+					elif self.board[row][col] == 'bb':
+						if oneBlackBishop == True:
+							return False
+						elif oneBlackBishop == False:
+							oneBlackBishop = True
+							if ((col+row)%2) == 0:
+								blackBishopEvenLocation = True
+							else:
+								blackBishopOddLocation = True
+		
+		if (blackBishopEvenLocation and whiteBishopOddLocation) or (blackBishopOddLocation and whiteBishopEvenLocation):
+			return False
+		else:
+			return True
 	
-		#K vs K,B
-		#K vs K,N
 		#K,B vs K,B (Bishops on same color)
 	
 	#check if current player is in check
@@ -476,13 +517,13 @@ class GameState():
 							moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 							
 			#WHITE CASTLING
-			if pieceNameColor == "wk" and self.whiteKingMoved == False:
+			if pieceNameColor == "wk" and self.whiteKingMoved == False and self.inCheck == False:
 				if self.leftWhiteRookMoved == False and self.board[7][1] == '-' and self.board[7][2] == '-' and self.board[7][3] == '-':
 					moves.append(Move((r, c), (7, 2), self.board, 8))
 				if self.rightWhiteRookMoved == False and self.board[7][5] == '-' and self.board[7][6] == '-':
 					moves.append(Move((r, c), (7, 6), self.board, 9))
 			#BLACK CASTLING
-			if pieceNameColor == "bk" and self.blackKingMoved == False:
+			if pieceNameColor == "bk" and self.blackKingMoved == False and self.inCheck == False:
 				if self.leftBlackRookMoved == False and self.board[0][1] == '-' and self.board[0][2] == '-' and self.board[0][3] == '-':
 					moves.append(Move((r, c), (0, 2), self.board, 13))
 				if self.rightBlackRookMoved == False and self.board[0][5] == '-' and self.board[0][6] == '-':

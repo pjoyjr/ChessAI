@@ -11,9 +11,10 @@ FPS = 18
 IMAGES = {}
 
 
-AIPLAYER = True
+AIPLAYER = False
 WHITEAI = False
 BLACKAI = True
+AUTOMATEGAMES = False
 SLEEPTIME = 0
 
 
@@ -112,9 +113,10 @@ def main():
 				sys.stdout.write(str(gs.notationLog)+"\n")
 				sys.stdout.flush()
 				gs.writeResults()
-				del gs
-				gs = GameState()
-				validMoves = gs.getValidMoves()
+				if AUTOMATEGAMES:
+					del gs
+					gs = GameState()
+					validMoves = gs.getValidMoves()
 		
 		#AI PLAYING
 		if AIPLAYER:
@@ -147,9 +149,7 @@ def drawSquares(screen):
 		for col in range(DIM):
 				color = colors[((col+row)%2)]
 				p.draw.rect(screen, color, p.Rect(col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-				
-
-				
+					
 def drawLastMove(screen, gs):
 		colors = (p.Color("chartreuse"), p.Color("red"))
 		lastMove = gs.moveLog[len(gs.moveLog)-1]
@@ -161,7 +161,6 @@ def drawLastMove(screen, gs):
 			else:
 				p.draw.rect(screen, colors[1], p.Rect(gs.blackKingLoc[1]*SQ_SIZE, gs.blackKingLoc[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 			
-				
 def drawHighlightMoves(screen, gs, attackPiece):
 	validMoves = gs.getValidMoves()
 	if str(attackPiece) != '()':
