@@ -11,8 +11,8 @@ FPS = 18
 IMAGES = {}
 
 
-AIPLAYER = False
-WHITEAI = True
+AIPLAYER = True
+WHITEAI = False
 BLACKAI = True
 SLEEPTIME = 0
 

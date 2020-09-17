@@ -242,18 +242,6 @@ class GameState():
 			self.blackKingLoc = (move.endRow, move.endCol)
 			self.blackKingMoved =  True
 			
-		'''
-		CHECK STALEMATE
-		#TRADITIONAL/NO MOVES AVALIABLE
-		#THREEFOLD REPETITION
-		#FIFTY-MOVE RULE
-		#Impossibility of checkmate
-			#K vs K
-			#K vs K,B
-			#K vs K,N
-			#K,B vs K,B (Bishops on same color)
-		'''
-		
 	
 	def undoMove(self):
 		if(len(self.moveLog) != 0):
@@ -340,7 +328,7 @@ class GameState():
 				moves.remove(moves[i]) #5. if they do attack your king that move is not valid
 			self.whiteMove = not self.whiteMove
 			self.undoMove()
-		if len(moves) == 0: #either checkmate or stalemate
+		if len(moves) == 0 or self.isStalemate(): #either checkmate or stalemate
 			if self.inCheck():
 				self.checkmate = True
 			else:
@@ -350,9 +338,28 @@ class GameState():
 			self.stalemate = False
 			
 		return moves
+
+
+	'''
+	CHECK STALEMATE
+	#TRADITIONAL/NO MOVES AVALIABLE
+	#THREEFOLD REPETITION
+	#FIFTY-MOVE RULE
+	'''		
+	#
+	def isStalemate(self):
+		kingStalemate = True
+		#Impossibility of checkmate
+		#K vs K
+		for row in range(0,7):
+			for col in range(0,7):
+				if self.board[row][col] != '-' and self.board[row][col] != 'wk' and self.board[row][col] != 'bk':
+					kingStalemate = False
+		return kingStalemate
 	
-				
-			
+		#K vs K,B
+		#K vs K,N
+		#K,B vs K,B (Bishops on same color)
 	
 	#check if current player is in check
 	def inCheck(self):
@@ -547,37 +554,15 @@ class GameState():
 
 	#if color = a AI vs AI, color = w W vs AI, color = b B vs AI		
 	def AI(self, moves):
-		excellentMoves = []
-		greatMoves = []
 		goodMoves = []
 		
 		for move in moves:
-			#see if you can check opponent
-			self.makeMove(move, moves)
-			if self.inCheck():
-				if not self.squareUnderAttack(move.startRow, move.startCol):
-					excellentMoves.append(move)
-			self.undoMove()
 			#check if can attack piece
 			if move.pieceCaptured != "-":
-				self.makeMove(move, moves)
-				if not self.squareUnderAttack(move.startRow, move.startCol):
-					greatMoves.append(move)
-				self.undoMove()
-			#see if piece is under attack
-			if self.squareUnderAttack(move.startRow, move.startCol):
-				self.makeMove(move, moves)
-				if not self.squareUnderAttack(move.startRow, move.startCol):
-					goodMoves.append(move)
-				self.undoMove()
+				goodMoves.append(move)
 				
-		if len(excellentMoves) != 0:
-			rNum = random.randint(0,len(excellentMoves)-1)
-			self.makeMove(excellentMoves[rNum], moves)
-		elif len(greatMoves) != 0:
-			rNum = random.randint(0,len(greatMoves)-1)
-			self.makeMove(greatMoves[rNum], moves)
-		elif len(goodMoves) != 0:
+		
+		if len(goodMoves) != 0:
 			rNum = random.randint(0,len(goodMoves)-1)
 			self.makeMove(goodMoves[rNum], moves)
 		else:
