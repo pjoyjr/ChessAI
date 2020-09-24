@@ -91,6 +91,13 @@ def main():
 				
 		
 		if moveMade:
+			if gs.check:
+				sys.stdout.write("IN CHECK!!")
+				sys.stdout.flush()
+			else:
+				sys.stdout.write("!!!no check")
+				sys.stdout.flush()
+			
 			validMoves = gs.getValidMoves()
 			moveMade = False
 			
@@ -111,16 +118,16 @@ def main():
 				gs.AI(validMoves)
 				moveMade = True
 		
-		drawGame(screen, gs, sqSelected)
+		drawGame(screen, gs, sqSelected, validMoves)
 		clock.tick(FPS)
 		p.display.flip()
 		
 		
-def drawGame(screen, gs, attackPiece):
+def drawGame(screen, gs, attackPiece, validMoves):
 	drawSquares(screen) #draw squares on board
 	if len(gs.moveLog) != 0:
 		drawLastMove(screen, gs)
-	drawHighlightMoves(screen, gs, attackPiece)
+	drawHighlightMoves(screen, gs, attackPiece, validMoves)
 	drawLines(screen)
 	drawLettersNumbers(screen, gs)
 	drawPieces(screen, gs.board) #draw pieces on top of squares
@@ -143,8 +150,7 @@ def drawLastMove(screen, gs):
 			else:
 				p.draw.rect(screen, colors[1], p.Rect(gs.blackKingLoc[1]*SQ_SIZE, gs.blackKingLoc[0]*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 			
-def drawHighlightMoves(screen, gs, attackPiece):
-	validMoves = gs.getValidMoves()
+def drawHighlightMoves(screen, gs, attackPiece, validMoves):
 	if str(attackPiece) != '()':
 		color = p.Color("palegoldenrod")
 		for move in validMoves:

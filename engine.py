@@ -7,14 +7,14 @@ class GameState():
 
 	#init board
 	def __init__(self):
-		self.board = [["-", "-", "-", "-", "bk", "-", "-", "-"],
-						["-", "-", "wq", "-", "-", "-", "-", "-",],
+		self.board = [["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
+						["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
 						["-", "-", "-", "-", "-", "-", "-", "-",],
 						["-", "-", "-", "-", "-", "-", "-", "-",],
 						["-", "-", "-", "-", "-", "-", "-", "-",],
 						["-", "-", "-", "-", "-", "-", "-", "-",],
-						["-", "-", "-", "-", "-", "-", "-", "-",],
-						["-", "-", "-", "-", "wk", "-", "-", "-"]]
+						["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
+						["wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"]]
 			
 		'''
 		[["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
@@ -42,6 +42,7 @@ class GameState():
 		self.rightBlackRookMoved = False
 		
 		#gamestate variables
+		self.check = False
 		self.checkmate = False
 		self.stalemate = False
 		self.whiteMove = True #keep track of turn
@@ -226,9 +227,11 @@ class GameState():
 		self.whiteMove = not self.whiteMove #switch players	
 		
 		if self.inCheck():
+			self.check = True
 			notation = notation + "+"
 			self.notationLog.append(notation)
 		else:
+			self.check = False
 			self.notationLog.append(notation)
 		
 		#WHITE CASTLING
@@ -326,6 +329,11 @@ class GameState():
 				self.blackKingLoc = (move.startRow, move.startCol)
 				
 			self.whiteMove = not self.whiteMove
+			
+			if self.inCheck():
+				self.check = True
+			else:
+				self.check = False
 			
 	def getValidMoves(self):
 		#1. generate all possible moves
@@ -550,13 +558,13 @@ class GameState():
 							moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 							
 			#WHITE CASTLING
-			if pieceNameColor == "wk" and self.whiteKingMoved == False and self.inCheck == False:
+			if pieceNameColor == "wk" and self.whiteKingMoved == False and self.check == False:
 				if self.leftWhiteRookMoved == False and self.board[7][1] == '-' and self.board[7][2] == '-' and self.board[7][3] == '-':
 					moves.append(Move((r, c), (7, 2), self.board, 8))
 				if self.rightWhiteRookMoved == False and self.board[7][5] == '-' and self.board[7][6] == '-':
 					moves.append(Move((r, c), (7, 6), self.board, 9))
 			#BLACK CASTLING
-			if pieceNameColor == "bk" and self.blackKingMoved == False and self.inCheck == False:
+			if pieceNameColor == "bk" and self.blackKingMoved == False and self.check == False:
 				if self.leftBlackRookMoved == False and self.board[0][1] == '-' and self.board[0][2] == '-' and self.board[0][3] == '-':
 					moves.append(Move((r, c), (0, 2), self.board, 13))
 				if self.rightBlackRookMoved == False and self.board[0][5] == '-' and self.board[0][6] == '-':
