@@ -7,14 +7,26 @@ class GameState():
 
 	#init board
 	def __init__(self):
-		self.board = [["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
-			["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
-			["-", "-", "-", "-", "-", "-", "-", "-",],
-			["-", "-", "-", "-", "-", "-", "-", "-",],
-			["-", "-", "-", "-", "-", "-", "-", "-",],
-			["-", "-", "-", "-", "-", "-", "-", "-",],
-			["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
-			["wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"]]
+		self.board = [["-", "-", "-", "-", "bk", "-", "-", "-"],
+						["-", "-", "wq", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "wk", "-", "-", "-"]]
+			
+		'''
+		[["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
+						["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
+						["wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"]]
+		'''
+		
 		
 		self.rowNotation = ["8", "7", "6", "5", "4", "3", "2", "1"]
 		self.colNotation = ["a", "b", "c", "d", "e", "f", "g", "h"]
@@ -328,11 +340,25 @@ class GameState():
 				moves.remove(moves[i]) #5. if they do attack your king that move is not valid
 			self.whiteMove = not self.whiteMove
 			self.undoMove()
-		if len(moves) == 0 or self.isStalemate(): #either checkmate or stalemate
+		if len(moves) == 0 or self.isOtherStalemate(): #either checkmate or stalemate
 			if self.inCheck():
 				self.checkmate = True
+				lastMove = self.notationLog.pop()
+				lastMove = lastMove[0:len(lastMove)-1] + '#'
+				self.notationLog.append(lastMove)
+				if self.whiteMove:
+					notation = '0-1'
+				else:
+					notation = '1-0'
 			else:
 				self.stalemate = True
+				notation = '.5-.5'
+				
+			self.notationLog.append(notation)
+			sys.stdout.write(str(self.notationLog)+"\n")
+			sys.stdout.flush()
+			self.writeResults()			
+				
 		else:
 			self.checkmate = False
 			self.stalemate = False
@@ -341,13 +367,10 @@ class GameState():
 
 
 	'''
-	CHECK STALEMATE
-	#TRADITIONAL/NO MOVES AVALIABLE
 	#THREEFOLD REPETITION
 	#FIFTY-MOVE RULE
 	'''		
-	#
-	def isStalemate(self):
+	def isOtherStalemate(self):
 		oneKnight = False
 		
 		oneWhiteBishop = False
@@ -358,8 +381,9 @@ class GameState():
 		blackBishopOddLocation = False
 		blackBishopEvenLocation = False
 		
+		onlyKing = True
+		
 		#Impossibility of checkmate
-		#K vs K
 		for row in range(0,8):
 			for col in range(0,8):
 				if self.board[row][col] != '-':
@@ -368,13 +392,11 @@ class GameState():
 					if self.board[row][col][1] != 'k' and self.board[row][col][1] != 'b' and self.board[row][col][1] != 'n':
 						return False
 					
-					#K vs K,N
 					elif self.board[row][col][1] == 'n' and oneKnight:
 						return False
 					elif self.board[row][col][1] == 'n':
 						oneKnight = True
 						
-					#K vs K,B
 					elif self.board[row][col] == 'wb':
 						if oneWhiteBishop == True:
 							return False
@@ -394,13 +416,25 @@ class GameState():
 								blackBishopEvenLocation = True
 							else:
 								blackBishopOddLocation = True
+					if self.board[row][col][1] != 'k':
+						onlyKing = False
+						
 		
-		if (blackBishopEvenLocation and whiteBishopOddLocation) or (blackBishopOddLocation and whiteBishopEvenLocation):
-			return False
-		else:
-			return True
-	
 		#K,B vs K,B (Bishops on same color)
+		if (blackBishopEvenLocation and whiteBishopEvenLocation) or (blackBishopOddLocation and whiteBishopOddLocation):
+			return True
+		#K vs K,B
+		if (oneBlackBishop and not oneWhiteBishop) or (oneWhiteBishop and not oneBlackBishop):
+			return True
+		#K vs K,N 
+		elif oneKnight:
+			return True
+		#K vs K
+		elif onlyKing:
+			return True
+		else:
+			return False
+	
 	
 	#check if current player is in check
 	def inCheck(self):
@@ -408,9 +442,8 @@ class GameState():
 			return self.squareUnderAttack(self.whiteKingLoc[0], self.whiteKingLoc[1])
 		else:
 			return self.squareUnderAttack(self.blackKingLoc[0], self.blackKingLoc[1])
-			
-			
-	
+		
+		
 	#see if enemy can attack this squareUnderAttack
 	def squareUnderAttack(self, r, c):
 		self.whiteMove = not self.whiteMove

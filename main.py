@@ -14,7 +14,6 @@ IMAGES = {}
 AIPLAYER = False
 WHITEAI = False
 BLACKAI = True
-AUTOMATEGAMES = False
 SLEEPTIME = 0
 
 
@@ -92,31 +91,14 @@ def main():
 				
 		
 		if moveMade:
-			sys.stdout.write(str(gs.notationLog)+"\n")
-			sys.stdout.flush()
 			validMoves = gs.getValidMoves()
 			moveMade = False
 			
-			#check for CHECK/CHECKMATE/STALEMATE
-			if len(validMoves) == 0 or gs.stalemate:
-				if gs.checkmate:
-					lastMove = gs.notationLog.pop()
-					lastMove = lastMove[0:len(lastMove)-1] + '#'
-					gs.notationLog.append(lastMove)
-					if gs.whiteMove:
-						notation = '0-1'
-					else:
-						notation = '1-0'
-				else:
-					notation = '.5-.5'
-				gs.notationLog.append(notation)
-				sys.stdout.write(str(gs.notationLog)+"\n")
-				sys.stdout.flush()
-				gs.writeResults()
-				if AUTOMATEGAMES:
-					del gs
-					gs = GameState()
-					validMoves = gs.getValidMoves()
+			#check for CHECKMATE/STALEMATE
+			if gs.checkmate or gs.stalemate:
+				del gs
+				gs = GameState()
+				validMoves = gs.getValidMoves()
 		
 		#AI PLAYING
 		if AIPLAYER:
