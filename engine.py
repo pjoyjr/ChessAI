@@ -7,6 +7,17 @@ class GameState():
 
 	#init board
 	def __init__(self):
+		'''
+		self.board = [["-", "-", "-", "-", "bk", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "-", "-", "-", "-", "-",],
+						["-", "-", "-", "wq", "wk", "-", "-", "-",],]
+			
+		'''
 		self.board = [["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
 						["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
 						["-", "-", "-", "-", "-", "-", "-", "-",],
@@ -15,17 +26,7 @@ class GameState():
 						["-", "-", "-", "-", "-", "-", "-", "-",],
 						["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
 						["wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"]]
-			
-		'''
-		[["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
-						["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
-						["-", "-", "-", "-", "-", "-", "-", "-",],
-						["-", "-", "-", "-", "-", "-", "-", "-",],
-						["-", "-", "-", "-", "-", "-", "-", "-",],
-						["-", "-", "-", "-", "-", "-", "-", "-",],
-						["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
-						["wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"]]
-		'''
+	
 		
 		
 		self.rowNotation = ["8", "7", "6", "5", "4", "3", "2", "1"]
@@ -280,23 +281,25 @@ class GameState():
 			
 			#WHITE CASTLING
 			elif move.flag == 8:
-				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.startRow][move.startCol] = "wk"
 				self.board[move.endRow][move.endCol] = "-"
 				self.board[7][0] = "wr"
 				self.board[7][3] = "-"
 			elif move.flag == 9:
-				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.startRow][move.startCol] = "wk"
 				self.board[move.endRow][move.endCol] = "-"
+				sys.stdout.write("MADE IT HERE SOMEHOW")
+				sys.stdout.flush()
 				self.board[7][7] = "wr"
 				self.board[7][5] = "-"
 			#BLACK CASTLING
 			elif move.flag == 13:
-				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.startRow][move.startCol] = "bk"
 				self.board[move.endRow][move.endCol] = "-"
 				self.board[0][0] = "br"
 				self.board[0][3] = "-"
 			elif move.flag == 14:
-				self.board[move.startRow][move.startCol] = move.pieceMoved
+				self.board[move.startRow][move.startCol] = "bk"
 				self.board[move.endRow][move.endCol] = "-"
 				self.board[0][7] = "br"
 				self.board[0][5] = "-"
@@ -552,15 +555,15 @@ class GameState():
 							
 			#WHITE CASTLING
 			if pieceNameColor == "wk" and self.whiteKingMoved == False and self.check == False:
-				if self.leftWhiteRookMoved == False and self.board[7][1] == '-' and self.board[7][2] == '-' and self.board[7][3] == '-':
+				if self.leftWhiteRookMoved == False and self.board[7][0] == 'wr' and self.board[7][1] == '-' and self.board[7][2] == '-' and self.board[7][3] == '-':
 					moves.append(Move((r, c), (7, 2), self.board, 8))
-				if self.rightWhiteRookMoved == False and self.board[7][5] == '-' and self.board[7][6] == '-':
+				if self.rightWhiteRookMoved == False and self.board[7][5] == '-' and self.board[7][6] == '-' and self.board[7][7] == 'wr':
 					moves.append(Move((r, c), (7, 6), self.board, 9))
 			#BLACK CASTLING
 			if pieceNameColor == "bk" and self.blackKingMoved == False and self.check == False:
-				if self.leftBlackRookMoved == False and self.board[0][1] == '-' and self.board[0][2] == '-' and self.board[0][3] == '-':
+				if self.leftBlackRookMoved == False and self.board[0][0] == 'br' and self.board[0][1] == '-' and self.board[0][2] == '-' and self.board[0][3] == '-':
 					moves.append(Move((r, c), (0, 2), self.board, 13))
-				if self.rightBlackRookMoved == False and self.board[0][5] == '-' and self.board[0][6] == '-':
+				if self.rightBlackRookMoved == False and self.board[0][5] == '-' and self.board[0][6] == '-' and self.board[0][7] == 'br':
 					moves.append(Move((r, c), (0, 6), self.board, 14))
 				
 						
