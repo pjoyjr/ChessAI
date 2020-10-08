@@ -223,17 +223,6 @@ class GameState():
 					else:
 						notation = move.pieceMoved[1].upper() + endCol + endRow
 		
-		self.moveLog.append(move) #log move so we can undo
-		self.whiteMove = not self.whiteMove #switch players	
-		
-		if self.inCheck():
-			self.check = True
-			notation = notation + "+"
-			self.notationLog.append(notation)
-		else:
-			self.check = False
-			self.notationLog.append(notation)
-		
 		#WHITE CASTLING
 		if move.flag == 5: #flag 5 = white rook left first move
 			self.leftWhiteRookMoved = True
@@ -256,6 +245,14 @@ class GameState():
 		if move.pieceMoved == 'bk':
 			self.blackKingLoc = (move.endRow, move.endCol)
 			self.blackKingMoved =  True
+			
+		self.moveLog.append(move) #log move so we can undo
+		self.whiteMove = not self.whiteMove #switch players	
+		self.check = self.inCheck()
+		
+		if self.check:
+			notation = notation + "+"
+		self.notationLog.append(notation)
 			
 	
 	def undoMove(self):
@@ -329,11 +326,7 @@ class GameState():
 				self.blackKingLoc = (move.startRow, move.startCol)
 				
 			self.whiteMove = not self.whiteMove
-			
-			if self.inCheck():
-				self.check = True
-			else:
-				self.check = False
+			self.check = self.inCheck()
 			
 	def getValidMoves(self):
 		#1. generate all possible moves
