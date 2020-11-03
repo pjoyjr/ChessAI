@@ -11,9 +11,10 @@ FPS = 18
 IMAGES = {}
 
 
-AIPLAYER = False
 WHITEAI = False
 BLACKAI = True
+AIPLAYER = WHITEAI or BLACKAI
+AUTOMATIC = False
 SLEEPTIME = 0
 
 
@@ -88,39 +89,45 @@ def main():
 				if e.key == p.K_z and AIPLAYER == False: #undo when x is pressed
 					gs.undoMove()
 					moveMade = True
-				
-		
-		if moveMade:
-			if gs.check:
-				sys.stdout.write("IN CHECK!!")
-				sys.stdout.flush()
-			else:
-				sys.stdout.write("!!!no check")
-				sys.stdout.flush()
+				if e.key == p.K_n and (gs.checkmate or gs.stalemate) and not AUTOMATIC:
+					gs.writeResults()
+					del gs
+					gs = GameState()
+					validMoves = gs.getValidMoves()
 			
-			validMoves = gs.getValidMoves()
-			moveMade = False
-			
-			#check for CHECKMATE/STALEMATE
-			if gs.checkmate or gs.stalemate:
-				del gs
-				gs = GameState()
-				validMoves = gs.getValidMoves()
+		drawGame(screen, gs, sqSelected, validMoves)
+		clock.tick(FPS)
+		p.display.flip()
 		
 		#AI PLAYING
-		if AIPLAYER:
+		if AIPLAYER and not gs.checkmate and not gs.stalemate and moveMade == False:
 			if gs.whiteMove == False and BLACKAI:
+				sys.stdout.write("\n\nCalculating Black Move..")
+				sys.stdout.flush()
 				time.sleep(SLEEPTIME)
 				gs.AI(validMoves)
 				moveMade = True
 			elif gs.whiteMove == True and WHITEAI:
+				sys.stdout.write("\n\nCalculating White Move..")
+				sys.stdout.flush()
 				time.sleep(SLEEPTIME)
 				gs.AI(validMoves)
 				moveMade = True
+
+		if moveMade:
+			validMoves = gs.getValidMoves()
+			moveMade = False	
+			
+		if (gs.checkmate or gs.stalemate) and AUTOMATIC:
+			sys.stdout.write("GAMEOVER!!\n")
+			sys.stdout.write("NotationLog: {}".format(gs.notationLog))
+			sys.stdout.flush()
+			
+			gs.writeResults()
+			del gs
+			gs = GameState()
+			validMoves = gs.getValidMoves()
 		
-		drawGame(screen, gs, sqSelected, validMoves)
-		clock.tick(FPS)
-		p.display.flip()
 		
 		
 def drawGame(screen, gs, attackPiece, validMoves):
