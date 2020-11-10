@@ -7,7 +7,6 @@ class GameState():
 
 	#init board
 	def __init__(self):
-	
 		'''
 		self.board = [["-", "-", "-", "-", "bk", "-", "-", "-",],
 						["-", "-", "-", "-", "-", "-", "-", "-",],
@@ -32,6 +31,7 @@ class GameState():
 		
 		self.rowNotation = ["8", "7", "6", "5", "4", "3", "2", "1"]
 		self.colNotation = ["a", "b", "c", "d", "e", "f", "g", "h"]
+		self.notationLog = []
 		
 		#variables for castling
 		self.whiteKingMoved = False
@@ -54,26 +54,47 @@ class GameState():
 
 
 	def makeMove(self, move, validMoves):
+		notation = "Null"
 		#EN PASSANT
 		if move.flag == 1: #flag 1 = white en passant left
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.startRow][move.startCol-1] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
 			
+			startCol = self.colNotation[move.startCol]
+			endRow = self.rowNotation[move.endRow]
+			endCol = self.colNotation[move.endCol]
+			notation = startCol + "x"  + endCol + endRow
+			
 		elif move.flag == 2: #flag 2 = white en passant right
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.startRow][move.startCol+1] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
+			
+			startCol = self.colNotation[move.startCol]
+			endRow = self.rowNotation[move.endRow]
+			endCol = self.colNotation[move.endCol]
+			notation = startCol + "x" + endCol + endRow
 			
 		elif move.flag == 3: #flag 3 = black en passant left
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.startRow][move.startCol-1] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
 			
+			startCol = self.colNotation[move.startCol]
+			endRow = self.rowNotation[move.endRow]
+			endCol = self.colNotation[move.endCol]
+			notation = startCol + "x" + endCol + endRow 
+			
 		elif move.flag == 4: #flag 4 = black en passant right
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.startRow][move.startCol+1] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
+			
+			startCol = self.colNotation[move.startCol]
+			endRow = self.rowNotation[move.endRow]
+			endCol = self.colNotation[move.endCol]
+			notation = startCol + "x" + endCol + endRow 
 			
 		#WHITE CASTLING
 		elif move.flag == 8: #flag 8 = white castle left
@@ -82,11 +103,15 @@ class GameState():
 			self.board[7][0] = "-"
 			self.board[7][3] = "wr"
 			
+			notation = "O-O-O"
+			
 		elif move.flag == 9: #flag 9 = white castle right
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
 			self.board[7][7] = "-"
 			self.board[7][5] = "wr"
+			
+			notation = "O-O"
 			
 		#BLACK CASTLING
 		elif move.flag == 13: #flag 13 = black castle left
@@ -95,25 +120,110 @@ class GameState():
 			self.board[0][0] = "-"
 			self.board[0][3] = "br"
 			
+			notation = "O-O-O"
+			
 		elif move.flag == 14: #flag 14 = black castle right
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
 			self.board[0][7] = "-"
 			self.board[0][5] = "br"
 			
+			notation = "O-O"
+		
 		else:
 			self.board[move.startRow][move.startCol] = "-"
 			self.board[move.endRow][move.endCol] = move.pieceMoved
 			
-			#PAWN
+			#CHESS NOTATION
+			startRow = self.rowNotation[move.startRow]
+			startCol = self.colNotation[move.startCol]
+			endRow = self.rowNotation[move.endRow]
+			endCol = self.colNotation[move.endCol]
+			pieceCaptured = False if move.pieceCaptured == "-" else True
+			
+			#PAWN NOTATION
 			if move.pieceMoved[1] == "p":
+				#Regular notation	
+				if pieceCaptured:
+					notation = startCol + 'x' + endCol + endRow
+				else:
+					notation = endCol + endRow
 				#pawn promotion
 				if move.endRow == 7:
 					self.board[move.endRow][move.endCol] = 'bq'
-					
+					if pieceCaptured:
+						notation = startCol + 'x' + endCol + endRow + '=Q'
+					else:
+						notation = endCol + endRow + '=Q'
 				elif move.endRow == 0:
 					self.board[move.endRow][move.endCol] = 'wq'
+					if pieceCaptured:
+						notation = startCol + 'x' + endCol + endRow + '=Q'
+					else:
+						notation = endCol + endRow + '=Q'
 					
+			#REGULAR KING/QUEEN/BISHOP NOTATION
+			elif move.pieceMoved[1] == "k" or move.pieceMoved[1] == "q" or move.pieceMoved[1] == "b":
+				if pieceCaptured:
+					notation = move.pieceMoved[1].upper() + 'x' + endCol + endRow
+				else:
+					notation = move.pieceMoved[1].upper() + endCol + endRow
+			
+			#REGULAR KNIGHT NOTATION
+			elif move.pieceMoved[1] == "n":
+				isAmbiguous = False
+				isColAmbiguous = False
+				for checkMove in validMoves:
+					if move.moveID != checkMove.moveID and move.endRow == checkMove.endRow and move.endCol == checkMove.endCol and checkMove.pieceMoved[1] == "n":
+						isAmbiguous = True
+						if move.startCol == checkMove.startCol:
+							isColAmbiguous = True
+						
+				if isAmbiguous:
+					if isColAmbiguous:
+						if pieceCaptured:
+							notation = move.pieceMoved[1].upper() + startRow + 'x' + endCol + endRow
+						else:
+							notation = move.pieceMoved[1].upper() + startRow + endCol + endRow
+					else:
+						if pieceCaptured:
+							notation = move.pieceMoved[1].upper() + startCol + 'x' + endCol + endRow
+						else:
+							notation = move.pieceMoved[1].upper() + startCol + endCol + endRow
+				else:
+					if pieceCaptured:
+						notation = move.pieceMoved[1].upper() + 'x' + endCol + endRow
+					else:
+						notation = move.pieceMoved[1].upper() + endCol + endRow
+			
+			#REGULAR ROOK NOTATION
+			elif move.pieceMoved[1] == "r":
+				isAmbiguous = False
+				isColAmbiguous = False
+				for checkMove in validMoves:
+					if move.moveID != checkMove.moveID and move.endRow == checkMove.endRow and move.endCol == checkMove.endCol and checkMove.pieceMoved[1] == "r":
+						isAmbiguous = True
+						if move.startCol == checkMove.startCol:
+							isColAmbiguous = True
+						
+				if isAmbiguous:
+					if isColAmbiguous:
+						if pieceCaptured:
+							notation = move.pieceMoved[1].upper() + startRow + 'x' + endCol + endRow
+						else:
+							notation = move.pieceMoved[1].upper() + startRow + endCol + endRow
+					else:
+						if pieceCaptured:
+							notation = move.pieceMoved[1].upper() + startCol + 'x' + endCol + endRow
+						else:
+							notation = move.pieceMoved[1].upper() + startCol + endCol + endRow
+							
+				else:
+					if pieceCaptured:
+						notation = move.pieceMoved[1].upper() + 'x' + endCol + endRow
+					else:
+						notation = move.pieceMoved[1].upper() + endCol + endRow
+		
 		#WHITE CASTLING
 		if move.flag == 5: #flag 5 = white rook left first move
 			self.leftWhiteRookMoved = True
@@ -141,11 +251,16 @@ class GameState():
 		self.whiteMove = not self.whiteMove #switch players	
 		self.check = self.inCheck()
 		
-		
+		if self.check:
+			notation = notation + "+"
+		self.notationLog.append(notation)
+			
+	
 	def undoMove(self):
 		if(len(self.moveLog) != 0):
 			move = self.moveLog.pop()
-			
+			self.notationLog.pop()
+						
 			#EN PASSANT
 			if move.flag == 1:
 				self.board[move.startRow][move.startCol] = move.pieceMoved
@@ -227,22 +342,26 @@ class GameState():
 				moves.remove(moves[i]) #5. if they do attack your king that move is not valid
 			self.whiteMove = not self.whiteMove
 			self.undoMove()
-		
-		self.inCheck()
 		if len(moves) == 0 or self.isOtherStalemate(): #either checkmate or stalemate
-			if self.check:
+			if self.inCheck():
 				self.checkmate = True
+				lastMove = self.notationLog.pop()
+				lastMove = lastMove[0:len(lastMove)-1] + '#'
+				self.notationLog.append(lastMove)
 				if self.whiteMove:
-					self.moveLog.append('0-1')
+					notation = '0-1'
 				else:
-					self.moveLog.append('1-0')
+					notation = '1-0'
 			else:
 				self.stalemate = True
-				self.moveLog.append('.5-.5')
+				notation = '.5-.5'
+				
+			self.notationLog.append(notation)
+				
 		else:
 			self.checkmate = False
 			self.stalemate = False
-	
+			
 		return moves
 
 
@@ -430,13 +549,13 @@ class GameState():
 							moves.append(Move((r, c), (endRow, endCol), self.board, 0))
 							
 			#WHITE CASTLING
-			if pieceNameColor == "wk" and self.whiteKingMoved == False and self.check == False and self.board[7][4] == 'wk':
+			if pieceNameColor == "wk" and self.whiteKingMoved == False and self.check == False:
 				if self.leftWhiteRookMoved == False and self.board[7][0] == 'wr' and self.board[7][1] == '-' and self.board[7][2] == '-' and self.board[7][3] == '-':
 					moves.append(Move((r, c), (7, 2), self.board, 8))
 				if self.rightWhiteRookMoved == False and self.board[7][5] == '-' and self.board[7][6] == '-' and self.board[7][7] == 'wr':
 					moves.append(Move((r, c), (7, 6), self.board, 9))
 			#BLACK CASTLING
-			if pieceNameColor == "bk" and self.blackKingMoved == False and self.check == False and self.board[7][4] == 'bk':
+			if pieceNameColor == "bk" and self.blackKingMoved == False and self.check == False:
 				if self.leftBlackRookMoved == False and self.board[0][0] == 'br' and self.board[0][1] == '-' and self.board[0][2] == '-' and self.board[0][3] == '-':
 					moves.append(Move((r, c), (0, 2), self.board, 13))
 				if self.rightBlackRookMoved == False and self.board[0][5] == '-' and self.board[0][6] == '-' and self.board[0][7] == 'br':
@@ -502,45 +621,49 @@ class GameState():
 
 	#write results to file after game is over with move log and winner
 	def writeResults(self):
-		moveIDFile = 'moveIDHistory.py'
-		moveIDs = []
-		for move in self.moveLog:
-			moveIDs.append(move.moveID)
+		fname = 'gameHistory.py'
+		with open(fname, 'a') as f:
+			f.write('game = {}\n'.format(self.notationLog))
 
-		with open(moveIDFile, 'a') as f:
-			f.write('{}\n'.format(moveIDs))
-		'''
-	START OF AI
-	'''
-	def AI(self, validMoves):
-		if self.whiteMove:
-			bestMove = self.miniMax(validMoves)
-		else:
-			bestMove = self.maxMini(validMoves)
-		self.makeMove(validMoves[bestMove], validMoves)
-	
-	'''
-	moves = currentMoves, d = depth , i = index of Value, v = value, a = alpha, b = beta
-	'''
-	def miniMax(self, validMoves):
-		firstSetLength = len(validMoves)
-		firstSetScores = []
-		totalCalcs = 0
+	#if color = a AI vs AI, color = w W vs AI, color = b B vs AI		
+	def AI(self, moves):
+		bestMoveIndex = self.miniMax(moves)
+		self.makeMove(moves[bestMoveIndex], moves)
 		
-		for i in range(0, firstSetLength):
-			self.makeMove(validMoves[i], validMoves)
+	def miniMax(self, moves): #FOR WHITE TURN
+		startTime = time.perf_counter() #ANALYTICS
+		firstSetLength = len(moves)
+		firstSetScores = []
+		totalCalcs = 0 #ANALYTICS
+		
+		for i in range(0, firstSetLength-1):
+			self.makeMove(moves[i], moves) #first white move
 			secondSet = self.getValidMoves()
 			secondSetLength = len(secondSet)
 			secondSetScores = []
-			if secondSetLength == 0:
-				secondSetScores.append(10000)
-				totalCalcs = totalCalcs + 1
-			for j in range(0, secondSetLength):
-				self.makeMove(secondSet[j], secondSet)
-				boardEval = self.evaluateBoard()
-				secondSetScores.append(boardEval)
-				totalCalcs = totalCalcs + 1
-				self.undoMove()
+			if secondSetLength == 0: #if no moves after 1st white move
+				if self.checkmate:
+					firstSetScores.append(99999)
+				else:
+					firstSetScores.append(10000)
+				totalCalcs = totalCalcs + 1 #ANALYTICS
+			else:	
+				for j in range(0, secondSetLength-1):
+					self.makeMove(secondSet[j], secondSet) #first black move
+					thirdSet = self.getValidMoves()
+					thirdSetLength = len(thirdSet)
+					if thirdSetLength == 0: #if no moves after 1st black move
+						if self.checkmate:
+							secondSetScores.append(-99999)
+						else:
+							secondSetScores.append(-10000)
+						totalCalcs = totalCalcs + 1 #ANALYTICS
+					else:
+						boardEval = self.evaluateBoard()
+						secondSetScores.append(boardEval)
+						totalCalcs = totalCalcs + 1 #ANALYTICS
+					self.undoMove()
+					
 			firstSetScores.append(min(secondSetScores))
 			self.undoMove()
 		bestMoveScore = max(firstSetScores)
@@ -548,42 +671,17 @@ class GameState():
 		score = None
 		bestMoveIndex = 0
 		while(score != bestMoveScore):
-			bestMoveIndex = random.randint(0,len(validMoves)-1)
+			bestMoveIndex = random.randint(0,len(moves)-1)
 			score = firstSetScores[bestMoveIndex]	
+		
+		endTime = time.perf_counter() #ANALYTICS
+		totalTime = endTime - startTime
+		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
+		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
+		sys.stdout.flush()
 		
 		return bestMoveIndex
 		
-	def maxMini(self, validMoves):	
-		firstSetLength = len(validMoves)
-		firstSetScores = []
-		totalCalcs = 0
-		
-		for i in range(0, firstSetLength):
-			self.makeMove(validMoves[i], validMoves)
-			secondSet = self.getValidMoves()
-			secondSetLength = len(secondSet)
-			secondSetScores = []
-			if secondSetLength == 0:
-				secondSetScores.append(-10000)
-				totalCalcs = totalCalcs + 1
-			for j in range(0, secondSetLength):
-				self.makeMove(secondSet[j], secondSet)
-				boardEval = self.evaluateBoard()
-				secondSetScores.append(boardEval)
-				totalCalcs = totalCalcs + 1
-				self.undoMove()
-			firstSetScores.append(max(secondSetScores))
-			self.undoMove()
-		bestMoveScore = min(firstSetScores)
-		
-		score = None
-		bestMoveIndex = 0
-		while(score != bestMoveScore):
-			bestMoveIndex = random.randint(0,len(validMoves)-1)
-			score = firstSetScores[bestMoveIndex]	
-		
-		return bestMoveIndex
-	
 	def evaluateBoard(self):
 		pieceValue = {'q': 9, 'r': 5, 'b': 3, 'n': 3, 'p': 1, 'k': 100}
 		totalScore = 0

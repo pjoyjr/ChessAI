@@ -1,7 +1,5 @@
 class Move():
 	
-	
-	
 	def __init__(self, startSq, endSq, board, flag):
 		self.startRow = startSq[0]
 		self.startCol = startSq[1]
