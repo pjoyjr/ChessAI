@@ -621,50 +621,76 @@ class GameState():
 
 	#write results to file after game is over with move log and winner
 	def writeResults(self):
-		fname = 'gameHistory.py'
+		fname = 'notationLogHistory.py'
+		fname1 = 'moveIDHistory.py'
+		fname2 = 'moveFlagHistory.py'
+		moveIDHistory = []
+		moveFlagHistory = []
+		for move in self.moveLog:
+			moveIDHistory.append(move.moveID)
+			moveFlagHistory.append(move.flag)
+		
 		with open(fname, 'a') as f:
-			f.write('game = {}\n'.format(self.notationLog))
+			f.write('{}\n'.format(self.notationLog))
+		
+		with open(fname1, 'a') as f:
+			f.write('{}\n'.format(moveIDHistory))
+			
+		with open(fname2, 'a') as f:
+			f.write('{}\n'.format(moveFlagHistory))
 
 	#if color = a AI vs AI, color = w W vs AI, color = b B vs AI		
 	def AI(self, moves):
-		bestMoveIndex = self.miniMax(moves)
+		bestMoveIndex = None
+		if self.whiteMove:
+			sys.stdout.write("\nNotation Log Postmove: {}\n".format(self.notationLog))
+			sys.stdout.write("\n\nCalculating White Move...\n")
+			sys.stdout.flush()
+			bestMoveIndex = self.miniMax(moves)
+		else:
+			sys.stdout.write("\nNotation Log Postmove: {}".format(self.notationLog))
+			sys.stdout.write("\n\nCalculating Black Move...\n")
+			sys.stdout.flush()
+			bestMoveIndex = self.maxMini(moves)
 		self.makeMove(moves[bestMoveIndex], moves)
 		
 	def miniMax(self, moves): #FOR WHITE TURN
-		startTime = time.perf_counter() #ANALYTICS
-		firstSetLength = len(moves)
-		firstSetScores = []
-		totalCalcs = 0 #ANALYTICS
 		
-		for i in range(0, firstSetLength-1):
+		#ANALYTICS
+		startTime = time.perf_counter() 
+		totalCalcs = 0 
+		
+		priorEval = self.evaluateBoard()
+		firstSetScores = []
+		for i in range(0, len(moves)):
 			self.makeMove(moves[i], moves) #first white move
 			secondSet = self.getValidMoves()
-			secondSetLength = len(secondSet)
+			
 			secondSetScores = []
-			if secondSetLength == 0: #if no moves after 1st white move
-				if self.checkmate:
+			
+			if len(secondSet) == 0: #if no moves after 1st white move
+				currentEval = self.evaluateBoard()
+				if self.checkmate or priorEval < 0:  #checkmate or good stalemate
 					firstSetScores.append(99999)
-				else:
-					firstSetScores.append(10000)
+				else: #bad stalemate
+					firstSetScores.append(-10000)
 				totalCalcs = totalCalcs + 1 #ANALYTICS
 			else:	
-				for j in range(0, secondSetLength-1):
+				for j in range(0, len(secondSet)):
 					self.makeMove(secondSet[j], secondSet) #first black move
 					thirdSet = self.getValidMoves()
-					thirdSetLength = len(thirdSet)
-					if thirdSetLength == 0: #if no moves after 1st black move
-						if self.checkmate:
-							secondSetScores.append(-99999)
-						else:
-							secondSetScores.append(-10000)
+					if len(thirdSet) == 0: #if no moves after 1st black move
+						if self.checkmate or priorEval > 0:  #checkmate or good stalemate
+							firstSetScores.append(-99999)
+						else: #bad stalemate
+							firstSetScores.append(10000)
 						totalCalcs = totalCalcs + 1 #ANALYTICS
 					else:
 						boardEval = self.evaluateBoard()
 						secondSetScores.append(boardEval)
 						totalCalcs = totalCalcs + 1 #ANALYTICS
 					self.undoMove()
-					
-			firstSetScores.append(min(secondSetScores))
+				firstSetScores.append(min(secondSetScores))
 			self.undoMove()
 		bestMoveScore = max(firstSetScores)
 		
@@ -674,13 +700,72 @@ class GameState():
 			bestMoveIndex = random.randint(0,len(moves)-1)
 			score = firstSetScores[bestMoveIndex]	
 		
-		endTime = time.perf_counter() #ANALYTICS
+		#ANALYTICS
+		endTime = time.perf_counter() 
 		totalTime = endTime - startTime
+		sys.stdout.write("\n\nNotation Log Premove: {}".format(self.notationLog))
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
 		sys.stdout.flush()
 		
 		return bestMoveIndex
+		
+	def maxMini(self, moves): #FOR BLACK TURN
+		
+		#ANALYTICS
+		startTime = time.perf_counter() 
+		totalCalcs = 0 
+		
+		priorEval = self.evaluateBoard()
+		firstSetScores = []
+		for i in range(0, len(moves)):
+			self.makeMove(moves[i], moves) #first black move
+			secondSet = self.getValidMoves()
+			
+			secondSetScores = []
+			
+			if len(secondSet) == 0: #if no moves after 1st black move
+				currentEval = self.evaluateBoard()
+				if self.checkmate or priorEval > 0:  #checkmate or good stalemate
+					firstSetScores.append(-99999)
+				else: #bad stalemate
+					firstSetScores.append(10000)
+				totalCalcs = totalCalcs + 1 #ANALYTICS
+			else:	
+				for j in range(0, len(secondSet)):
+					self.makeMove(secondSet[j], secondSet) #first white move
+					thirdSet = self.getValidMoves()
+					if len(thirdSet) == 0: #if no moves after 1st white move
+						if self.checkmate or priorEval < 0:  #checkmate or good stalemate
+							firstSetScores.append(99999)
+						else: #bad stalemate
+							firstSetScores.append(-10000)
+						totalCalcs = totalCalcs + 1 #ANALYTICS
+					else:
+						boardEval = self.evaluateBoard()
+						secondSetScores.append(boardEval)
+						totalCalcs = totalCalcs + 1 #ANALYTICS
+					self.undoMove()
+				firstSetScores.append(max(secondSetScores))
+			self.undoMove()
+		bestMoveScore = min(firstSetScores)
+		
+		score = None
+		bestMoveIndex = 0
+		while(score != bestMoveScore):
+			bestMoveIndex = random.randint(0,len(moves)-1)
+			score = firstSetScores[bestMoveIndex]	
+		
+		#ANALYTICS
+		endTime = time.perf_counter() 
+		totalTime = endTime - startTime
+		sys.stdout.write("\n\nNotation Log Premove: {}".format(self.notationLog))
+		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
+		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
+		sys.stdout.flush()
+		
+		return bestMoveIndex
+		
 		
 	def evaluateBoard(self):
 		pieceValue = {'q': 9, 'r': 5, 'b': 3, 'n': 3, 'p': 1, 'k': 100}
