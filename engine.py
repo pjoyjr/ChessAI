@@ -345,8 +345,6 @@ class GameState():
 		self.inCheck()
 		if len(moves) == 0 or self.isOtherStalemate(): #either checkmate or stalemate
 			if self.check:
-				sys.stdout.write("\nNotationLog Prior: {}".format(self.notationLog))
-				sys.stdout.flush()
 				self.checkmate = True
 				lastMove = self.notationLog.pop()
 				lastMove = lastMove + '#'
@@ -367,8 +365,6 @@ class GameState():
 			self.checkmate = False
 			self.stalemate = False
 	
-		sys.stdout.write("\nNotationLog Post: {}".format(self.notationLog))
-		sys.stdout.flush()	
 		return moves
 
 
@@ -641,28 +637,28 @@ class GameState():
 		'''
 	START OF AI
 	'''
-	def AI(self, moves):
+	def AI(self, validMoves):
 		if self.whiteMove:
-			bestMove = self.miniMax(moves)
+			bestMove = self.miniMax(validMoves)
 		else:
-			bestMove = self.maxMini(moves)
-		self.makeMove(moves[bestMove], moves)
+			bestMove = self.maxMini(validMoves)
+		self.makeMove(validMoves[bestMove], validMoves)
 	
 	'''
 	moves = currentMoves, d = depth , i = index of Value, v = value, a = alpha, b = beta
 	'''
-	def miniMax(self, moves):
-		firstSetLength = len(moves)
+	def miniMax(self, validMoves):
+		firstSetLength = len(validMoves)
 		firstSetScores = []
 		totalCalcs = 0
 		
 		for i in range(0, firstSetLength):
-			self.makeMove(moves[i], moves)
-			secondSet = self.getAllPossibleMoves()
+			self.makeMove(validMoves[i], validMoves)
+			secondSet = self.getValidMoves()
 			secondSetLength = len(secondSet)
 			secondSetScores = []
 			if secondSetLength == 0:
-				firstSetScores.append(10000)
+				secondSetScores.append(10000)
 				totalCalcs = totalCalcs + 1
 			for j in range(0, secondSetLength):
 				self.makeMove(secondSet[j], secondSet)
@@ -677,23 +673,23 @@ class GameState():
 		score = None
 		bestMoveIndex = 0
 		while(score != bestMoveScore):
-			bestMoveIndex = random.randint(0,len(moves)-1)
+			bestMoveIndex = random.randint(0,len(validMoves)-1)
 			score = firstSetScores[bestMoveIndex]	
 		
 		return bestMoveIndex
 		
-	def maxMini(self, moves):	
-		firstSetLength = len(moves)
+	def maxMini(self, validMoves):	
+		firstSetLength = len(validMoves)
 		firstSetScores = []
 		totalCalcs = 0
 		
 		for i in range(0, firstSetLength):
-			self.makeMove(moves[i], moves)
-			secondSet = self.getAllPossibleMoves()
+			self.makeMove(validMoves[i], validMoves)
+			secondSet = self.getValidMoves()
 			secondSetLength = len(secondSet)
 			secondSetScores = []
 			if secondSetLength == 0:
-				firstSetScores.append(-10000)
+				secondSetScores.append(-10000)
 				totalCalcs = totalCalcs + 1
 			for j in range(0, secondSetLength):
 				self.makeMove(secondSet[j], secondSet)
@@ -708,7 +704,7 @@ class GameState():
 		score = None
 		bestMoveIndex = 0
 		while(score != bestMoveScore):
-			bestMoveIndex = random.randint(0,len(moves)-1)
+			bestMoveIndex = random.randint(0,len(validMoves)-1)
 			score = firstSetScores[bestMoveIndex]	
 		
 		return bestMoveIndex

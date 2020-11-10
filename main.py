@@ -11,11 +11,11 @@ FPS = 18
 IMAGES = {}
 
 
-WHITEAI = False
+WHITEAI = True
 BLACKAI = True
 AIPLAYER = WHITEAI or BLACKAI
-AUTOMATIC = False
-SLEEPTIME = 0
+AUTOMATIC = True
+SLEEPTIME = 1
 
 
 def loadImages():
@@ -102,14 +102,10 @@ def main():
 		#AI PLAYING
 		if AIPLAYER and not gs.checkmate and not gs.stalemate and moveMade == False:
 			if gs.whiteMove == False and BLACKAI:
-				sys.stdout.write("\n\nCalculating Black Move..")
-				sys.stdout.flush()
 				time.sleep(SLEEPTIME)
 				gs.AI(validMoves)
 				moveMade = True
 			elif gs.whiteMove == True and WHITEAI:
-				sys.stdout.write("\n\nCalculating White Move..")
-				sys.stdout.flush()
 				time.sleep(SLEEPTIME)
 				gs.AI(validMoves)
 				moveMade = True
@@ -119,10 +115,6 @@ def main():
 			moveMade = False	
 			
 		if (gs.checkmate or gs.stalemate) and AUTOMATIC:
-			sys.stdout.write("GAMEOVER!!\n")
-			sys.stdout.write("NotationLog: {}".format(gs.notationLog))
-			sys.stdout.flush()
-			
 			gs.writeResults()
 			del gs
 			gs = GameState()
