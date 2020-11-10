@@ -652,7 +652,7 @@ class GameState():
 		else:
 			sys.stdout.write("\n\nRandom Black Move...\n")
 			sys.stdout.flush()
-			self.randomMove(moves)
+			self.maxMini(moves)
 		
 	def miniMax(self, moves): #FOR WHITE TURN
 		#ANALYTICS
