@@ -12,10 +12,10 @@ IMAGES = {}
 
 
 WHITEAI = True
-BLACKAI = True
+BLACKAI = True 	
 AIPLAYER = WHITEAI or BLACKAI
 AUTOMATIC = True
-SLEEPTIME = 1
+SLEEPTIME = 0
 
 
 def loadImages():
@@ -83,11 +83,11 @@ def main():
 					gs.undoMove()
 					gs.undoMove()					
 					moveMade = True
-				if e.key == p.K_x and AIPLAYER:
-					gs.undoMove()					
-					moveMade = True
-				if e.key == p.K_z and AIPLAYER == False: #undo when x is pressed
+				if e.key == p.K_z and AIPLAYER == False: 
 					gs.undoMove()
+					moveMade = True
+				if e.key == p.K_x and AIPLAYER: #undo when x is pressed
+					gs.undoMove()					
 					moveMade = True
 				if e.key == p.K_n and (gs.checkmate or gs.stalemate) and not AUTOMATIC:
 					gs.writeResults()
@@ -110,7 +110,7 @@ def main():
 				gs.AI(validMoves)
 				moveMade = True
 
-		if moveMade:
+		if moveMade and not gs.checkmate and not gs.stalemate:
 			validMoves = gs.getValidMoves()
 			moveMade = False	
 			

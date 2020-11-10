@@ -342,21 +342,20 @@ class GameState():
 				moves.remove(moves[i]) #5. if they do attack your king that move is not valid
 			self.whiteMove = not self.whiteMove
 			self.undoMove()
-		if len(moves) == 0 or self.isOtherStalemate(): #either checkmate or stalemate
-			if self.inCheck():
+		self.inCheck()
+		if len(moves) == 0 or self.isOtherStalemate(): #checkmate or stalemate
+			if self.check:
 				self.checkmate = True
 				lastMove = self.notationLog.pop()
 				lastMove = lastMove[0:len(lastMove)-1] + '#'
 				self.notationLog.append(lastMove)
 				if self.whiteMove:
-					notation = '0-1'
+					self.notationLog.append('0-1')
 				else:
-					notation = '1-0'
+					self.notationLog.append('1-0')
 			else:
 				self.stalemate = True
-				notation = '.5-.5'
-				
-			self.notationLog.append(notation)
+				self.notationLog.append('.5-.5')
 				
 		else:
 			self.checkmate = False
@@ -630,6 +629,11 @@ class GameState():
 			moveIDHistory.append(move.moveID)
 			moveFlagHistory.append(move.flag)
 		
+		
+		sys.stdout.write("\n\nWriting to file...")
+		sys.stdout.write("\nMoveID Length: {}, Move Flag Length: {}, Notation Length: {}\n".format(len(moveIDHistory), len(moveFlagHistory), len(self.notationLog)))
+		sys.stdout.flush()
+		
 		with open(fname, 'a') as f:
 			f.write('{}\n'.format(self.notationLog))
 		
@@ -641,31 +645,30 @@ class GameState():
 
 	#if color = a AI vs AI, color = w W vs AI, color = b B vs AI		
 	def AI(self, moves):
-		bestMoveIndex = None
 		if self.whiteMove:
-			sys.stdout.write("\nNotation Log Postmove: {}\n".format(self.notationLog))
 			sys.stdout.write("\n\nCalculating White Move...\n")
 			sys.stdout.flush()
-			bestMoveIndex = self.miniMax(moves)
+			self.miniMax(moves)
 		else:
-			sys.stdout.write("\nNotation Log Postmove: {}".format(self.notationLog))
-			sys.stdout.write("\n\nCalculating Black Move...\n")
+			sys.stdout.write("\n\nRandom Black Move...\n")
 			sys.stdout.flush()
-			bestMoveIndex = self.maxMini(moves)
-		self.makeMove(moves[bestMoveIndex], moves)
+			self.randomMove(moves)
 		
 	def miniMax(self, moves): #FOR WHITE TURN
-		
 		#ANALYTICS
 		startTime = time.perf_counter() 
 		totalCalcs = 0 
 		
+		originalNotationLog = self.notationLog[:]
+		originalMoveLog = self.moveLog[:]
 		priorEval = self.evaluateBoard()
 		firstSetScores = []
+		alpha = 0
+		beta = 0
+		
 		for i in range(0, len(moves)):
 			self.makeMove(moves[i], moves) #first white move
 			secondSet = self.getValidMoves()
-			
 			secondSetScores = []
 			
 			if len(secondSet) == 0: #if no moves after 1st white move
@@ -689,39 +692,46 @@ class GameState():
 						boardEval = self.evaluateBoard()
 						secondSetScores.append(boardEval)
 						totalCalcs = totalCalcs + 1 #ANALYTICS
+							
 					self.undoMove()
 				firstSetScores.append(min(secondSetScores))
 			self.undoMove()
+			
 		bestMoveScore = max(firstSetScores)
+		bestMoveIndex = []
+		for z in range(0,len(firstSetScores)):
+			if firstSetScores[z] == bestMoveScore:
+				bestMoveIndex.append(z)
 		
-		score = None
-		bestMoveIndex = 0
-		while(score != bestMoveScore):
-			bestMoveIndex = random.randint(0,len(moves)-1)
-			score = firstSetScores[bestMoveIndex]	
+		finalIndex = bestMoveIndex[random.randint(0,len(bestMoveIndex)-1)]
 		
 		#ANALYTICS
 		endTime = time.perf_counter() 
 		totalTime = endTime - startTime
-		sys.stdout.write("\n\nNotation Log Premove: {}".format(self.notationLog))
+		
+		self.moveLog = originalMoveLog
+		self.notationLog = originalNotationLog
+		self.makeMove(moves[finalIndex], moves)
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
+		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.evaluateBoard()))
 		sys.stdout.flush()
 		
-		return bestMoveIndex
-		
 	def maxMini(self, moves): #FOR BLACK TURN
-		
 		#ANALYTICS
 		startTime = time.perf_counter() 
 		totalCalcs = 0 
 		
+		originalNotationLog = self.notationLog[:]
+		originalMoveLog = self.moveLog[:]
 		priorEval = self.evaluateBoard()
 		firstSetScores = []
+		alpha = 0
+		beta = 0
+		
 		for i in range(0, len(moves)):
 			self.makeMove(moves[i], moves) #first black move
 			secondSet = self.getValidMoves()
-			
 			secondSetScores = []
 			
 			if len(secondSet) == 0: #if no moves after 1st black move
@@ -745,38 +755,48 @@ class GameState():
 						boardEval = self.evaluateBoard()
 						secondSetScores.append(boardEval)
 						totalCalcs = totalCalcs + 1 #ANALYTICS
+							
 					self.undoMove()
 				firstSetScores.append(max(secondSetScores))
 			self.undoMove()
+			
 		bestMoveScore = min(firstSetScores)
+		bestMoveIndex = []
+		for z in range(0,len(firstSetScores)):
+			if firstSetScores[z] == bestMoveScore:
+				bestMoveIndex.append(z)
 		
-		score = None
-		bestMoveIndex = 0
-		while(score != bestMoveScore):
-			bestMoveIndex = random.randint(0,len(moves)-1)
-			score = firstSetScores[bestMoveIndex]	
+		finalIndex = bestMoveIndex[random.randint(0,len(bestMoveIndex)-1)]
 		
 		#ANALYTICS
 		endTime = time.perf_counter() 
 		totalTime = endTime - startTime
-		sys.stdout.write("\n\nNotation Log Premove: {}".format(self.notationLog))
+		
+		self.moveLog = originalMoveLog
+		self.notationLog = originalNotationLog
+		self.makeMove(moves[finalIndex], moves)
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
-		sys.stdout.flush()
-		
-		return bestMoveIndex
-		
+		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.evaluateBoard()))
+		sys.stdout.flush()	
+
+	
+	def randomMove(self, moves):
+		rNum = random.randint(0,len(moves)-1)
+		self.makeMove(moves[rNum], moves)
 		
 	def evaluateBoard(self):
 		pieceValue = {'q': 9, 'r': 5, 'b': 3, 'n': 3, 'p': 1, 'k': 100}
-		totalScore = 0
+		materialCount = 0
 		
 		for row in range(0,8):
 			for col in range(0,8):
 				if self.board[row][col] != '-':
 					pieceName = self.board[row][col][1]
 					if self.board[row][col][0] == 'w':
-						totalScore = totalScore + pieceValue[pieceName]
+						materialCount = materialCount + pieceValue[pieceName]
 					else:
-						totalScore = totalScore - pieceValue[pieceName]
-		return totalScore
+						materialCount = materialCount - pieceValue[pieceName]
+						
+		totalCount = materialCount
+		return totalCount
