@@ -366,7 +366,6 @@ class GameState():
 
 	'''
 	#THREEFOLD REPETITION
-	#FIFTY-MOVE RULE
 	'''		
 	def isOtherStalemate(self):
 		oneKnight = False
@@ -416,8 +415,20 @@ class GameState():
 								blackBishopOddLocation = True
 					if self.board[row][col][1] != 'k':
 						onlyKing = False
-						
 		
+		#FIFTY-MOVE RULE 
+		''''''
+		fiftyMoveStalemate = True
+		if len(self.notationLog) > 50:
+			for i in range(len(self.notationLog)-1, len(self.notationLog)-51, -1):
+				if 'x' in self.notationLog[i] or '=' in self.notationLog:
+					fiftyMoveStalemate = False
+			if fiftyMoveStalemate:
+				sys.stdout.write("\n\n\nFIFTY-MOVE RULE STALEMATE HIT!!!\nNotationLog: {}".format(self.notationLog))
+				sys.stdout.flush()
+				return True
+		
+			
 		#K,B vs K,B (Bishops on same color)
 		if (blackBishopEvenLocation and whiteBishopEvenLocation) or (blackBishopOddLocation and whiteBishopOddLocation):
 			return True
@@ -642,15 +653,14 @@ class GameState():
 			
 		with open(fname2, 'a') as f:
 			f.write('{}\n'.format(moveFlagHistory))
-
-	#if color = a AI vs AI, color = w W vs AI, color = b B vs AI		
+	
 	def AI(self, moves):
 		if self.whiteMove:
 			sys.stdout.write("\n\nCalculating White Move...\n")
 			sys.stdout.flush()
 			self.miniMax(moves)
 		else:
-			sys.stdout.write("\n\nRandom Black Move...\n")
+			sys.stdout.write("\n\nCalculating Black Move...\n")
 			sys.stdout.flush()
 			self.maxMini(moves)
 		
@@ -684,9 +694,9 @@ class GameState():
 					thirdSet = self.getValidMoves()
 					if len(thirdSet) == 0: #if no moves after 1st black move
 						if self.checkmate or priorEval > 0:  #checkmate or good stalemate
-							firstSetScores.append(-99999)
+							secondSetScores.append(-99999)
 						else: #bad stalemate
-							firstSetScores.append(10000)
+							secondSetScores.append(10000)
 						totalCalcs = totalCalcs + 1 #ANALYTICS
 					else:
 						boardEval = self.evaluateBoard()
@@ -711,10 +721,16 @@ class GameState():
 		
 		self.moveLog = originalMoveLog
 		self.notationLog = originalNotationLog
+		
+		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}, Final Score Index: {}, Moves length: {} == FirstSetLen: {}".format(firstSetScores, bestMoveIndex, finalIndex, len(moves),len(firstSetScores)))
+		sys.stdout.flush()	
+		
 		self.makeMove(moves[finalIndex], moves)
+		
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
 		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.evaluateBoard()))
+		sys.stdout.write("\nNotation Log: {}".format(self.notationLog))
 		sys.stdout.flush()
 		
 	def maxMini(self, moves): #FOR BLACK TURN
@@ -747,9 +763,9 @@ class GameState():
 					thirdSet = self.getValidMoves()
 					if len(thirdSet) == 0: #if no moves after 1st white move
 						if self.checkmate or priorEval < 0:  #checkmate or good stalemate
-							firstSetScores.append(99999)
+							secondSetScores.append(99999)
 						else: #bad stalemate
-							firstSetScores.append(-10000)
+							secondSetScores.append(-10000)
 						totalCalcs = totalCalcs + 1 #ANALYTICS
 					else:
 						boardEval = self.evaluateBoard()
@@ -774,10 +790,16 @@ class GameState():
 		
 		self.moveLog = originalMoveLog
 		self.notationLog = originalNotationLog
+		
+		
+		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}, Final Score Index: {}, Moves length: {} == FirstSetLen: {}".format(firstSetScores, bestMoveIndex, finalIndex, len(moves),len(firstSetScores)))
+		sys.stdout.flush()	
+		
 		self.makeMove(moves[finalIndex], moves)
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
 		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.evaluateBoard()))
+		sys.stdout.write("\nNotation Log: {}".format(self.notationLog))
 		sys.stdout.flush()	
 
 	
