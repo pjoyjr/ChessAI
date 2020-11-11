@@ -3,6 +3,9 @@ import random
 
 import sys, time
 
+CHECKMATEVALUE = 999999
+STALEMATEVALUE = 100000
+
 class GameState():
 
 	#init board
@@ -655,15 +658,31 @@ class GameState():
 			f.write('{}\n'.format(moveFlagHistory))
 	
 	def AI(self, moves):
-		if self.whiteMove:
-			sys.stdout.write("\n\nCalculating White Move...\n")
-			sys.stdout.flush()
-			self.miniMax(moves)
-		else:
-			sys.stdout.write("\n\nCalculating Black Move...\n")
-			sys.stdout.flush()
-			self.maxMini(moves)
+		if self.compareGameHistory()[0] == False: #If result not found do miniMax/maxMini
 		
+			
+			if self.whiteMove:
+				sys.stdout.write("\n\nCalculating White Move...\n")
+				sys.stdout.flush()
+				self.miniMax(moves)
+			else:
+				sys.stdout.write("\n\nCalculating Black Move...\n")
+				sys.stdout.flush()
+				self.maxMini(moves)
+	
+	def compareGameHistory(self):
+		
+		if self.whiteMove:
+			pass
+		else:
+			pass
+		
+		
+		
+		if True:
+			return (False, None)
+		return (True, None) #returns Move()
+	
 	def miniMax(self, moves): #FOR WHITE TURN
 		#ANALYTICS
 		startTime = time.perf_counter() 
@@ -684,9 +703,9 @@ class GameState():
 			if len(secondSet) == 0: #if no moves after 1st white move
 				currentEval = self.evaluateBoard()
 				if self.checkmate or priorEval < 0:  #checkmate or good stalemate
-					firstSetScores.append(99999)
+					firstSetScores.append(CHECKMATEVALUE)
 				else: #bad stalemate
-					firstSetScores.append(-10000)
+					firstSetScores.append(-STALEMATEVALUE)
 				totalCalcs = totalCalcs + 1 #ANALYTICS
 			else:	
 				for j in range(0, len(secondSet)):
@@ -694,9 +713,9 @@ class GameState():
 					thirdSet = self.getValidMoves()
 					if len(thirdSet) == 0: #if no moves after 1st black move
 						if self.checkmate or priorEval > 0:  #checkmate or good stalemate
-							secondSetScores.append(-99999)
+							secondSetScores.append(-CHECKMATEVALUE)
 						else: #bad stalemate
-							secondSetScores.append(10000)
+							secondSetScores.append(STALEMATEVALUE)
 						totalCalcs = totalCalcs + 1 #ANALYTICS
 					else:
 						boardEval = self.evaluateBoard()
@@ -722,7 +741,7 @@ class GameState():
 		self.moveLog = originalMoveLog
 		self.notationLog = originalNotationLog
 		
-		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}, Final Score Index: {}, Moves length: {} == FirstSetLen: {}".format(firstSetScores, bestMoveIndex, finalIndex, len(moves),len(firstSetScores)))
+		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}\nFinal Score Index: {}\n".format(firstSetScores, bestMoveIndex, finalIndex))
 		sys.stdout.flush()	
 		
 		self.makeMove(moves[finalIndex], moves)
@@ -753,9 +772,9 @@ class GameState():
 			if len(secondSet) == 0: #if no moves after 1st black move
 				currentEval = self.evaluateBoard()
 				if self.checkmate or priorEval > 0:  #checkmate or good stalemate
-					firstSetScores.append(-99999)
+					firstSetScores.append(-CHECKMATEVALUE)
 				else: #bad stalemate
-					firstSetScores.append(10000)
+					firstSetScores.append(STALEMATEVALUE)
 				totalCalcs = totalCalcs + 1 #ANALYTICS
 			else:	
 				for j in range(0, len(secondSet)):
@@ -763,9 +782,9 @@ class GameState():
 					thirdSet = self.getValidMoves()
 					if len(thirdSet) == 0: #if no moves after 1st white move
 						if self.checkmate or priorEval < 0:  #checkmate or good stalemate
-							secondSetScores.append(99999)
+							secondSetScores.append(CHECKMATEVALUE)
 						else: #bad stalemate
-							secondSetScores.append(-10000)
+							secondSetScores.append(-STALEMATEVALUE)
 						totalCalcs = totalCalcs + 1 #ANALYTICS
 					else:
 						boardEval = self.evaluateBoard()
@@ -791,9 +810,8 @@ class GameState():
 		self.moveLog = originalMoveLog
 		self.notationLog = originalNotationLog
 		
-		
-		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}, Final Score Index: {}, Moves length: {} == FirstSetLen: {}".format(firstSetScores, bestMoveIndex, finalIndex, len(moves),len(firstSetScores)))
-		sys.stdout.flush()	
+		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}\nFinal Score Index: {}\n".format(firstSetScores, bestMoveIndex, finalIndex))
+		sys.stdout.flush()		
 		
 		self.makeMove(moves[finalIndex], moves)
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
@@ -807,18 +825,51 @@ class GameState():
 		rNum = random.randint(0,len(moves)-1)
 		self.makeMove(moves[rNum], moves)
 		
+	# (Material Count * 100) + Pawn Structure
 	def evaluateBoard(self):
 		pieceValue = {'q': 9, 'r': 5, 'b': 3, 'n': 3, 'p': 1, 'k': 100}
 		materialCount = 0
+		pawnStructureCount = 0
 		
 		for row in range(0,8):
 			for col in range(0,8):
 				if self.board[row][col] != '-':
 					pieceName = self.board[row][col][1]
+					#WHITE EVAL
 					if self.board[row][col][0] == 'w':
 						materialCount = materialCount + pieceValue[pieceName]
+						#Pawn Structures 
+						if self.board[row][col][1] == 'p':
+							if col + 1 < 8 and row + 1 < 8:
+								if self.board[row+1][col+1] == 'wp':
+									pawnStructureCount = pawnStructureCount + 1
+							if col + 1 < 8:
+								if self.board[row-1][col+1] == 'wp':
+									pawnStructureCount = pawnStructureCount + 1
+								if self.board[row][col+1] == 'wp':
+									pawnStructureCount = pawnStructureCount + 1
+							if row + 1 < 8:
+								if self.board[row+1][col] == 'wp':
+									pawnStructureCount = pawnStructureCount - 1
+							if self.board[row-1][col] == 'wp':
+								pawnStructureCount = pawnStructureCount - 1
 					else:
 						materialCount = materialCount - pieceValue[pieceName]
+						#Pawn Structures 
+						if self.board[row][col][1] == 'p':
+							if col + 1 < 8 and row + 1 < 8:
+								if self.board[row+1][col+1] == 'bp':
+									pawnStructureCount = pawnStructureCount - 1
+							if col + 1 < 8:
+								if self.board[row-1][col+1] == 'bp':
+									pawnStructureCount = pawnStructureCount - 1
+								if self.board[row][col+1] == 'bp':
+									pawnStructureCount = pawnStructureCount - 1
+							if row + 1 < 8:
+								if self.board[row+1][col] == 'bp':
+									pawnStructureCount = pawnStructureCount + 1
+							if self.board[row-1][col] == 'bp':
+								pawnStructureCount = pawnStructureCount + 1
 						
-		totalCount = materialCount
+		totalCount = materialCount * 100 + pawnStructureCount
 		return totalCount
