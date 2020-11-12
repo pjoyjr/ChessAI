@@ -105,7 +105,7 @@ def main():
 			if RANDOM:
 				if gs.whiteMove == False and BLACKAI:
 					time.sleep(SLEEPTIME)
-					gs.randomMove(moves)
+					gs.randomMove(validMoves)
 					moveMade = True
 				elif gs.whiteMove == True and WHITEAI:
 					time.sleep(SLEEPTIME)
