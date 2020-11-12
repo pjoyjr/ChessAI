@@ -16,6 +16,7 @@ BLACKAI = True
 AIPLAYER = WHITEAI or BLACKAI
 AUTOMATIC = True
 SLEEPTIME = 0
+RANDOM = True
 
 
 def loadImages():
@@ -101,14 +102,25 @@ def main():
 		
 		#AI PLAYING
 		if AIPLAYER and not gs.checkmate and not gs.stalemate and moveMade == False:
-			if gs.whiteMove == False and BLACKAI:
-				time.sleep(SLEEPTIME)
-				gs.AI(validMoves)
-				moveMade = True
-			elif gs.whiteMove == True and WHITEAI:
-				time.sleep(SLEEPTIME)
-				gs.AI(validMoves)
-				moveMade = True
+			if RANDOM:
+				if gs.whiteMove == False and BLACKAI:
+					time.sleep(SLEEPTIME)
+					gs.randomMove(moves)
+					moveMade = True
+				elif gs.whiteMove == True and WHITEAI:
+					time.sleep(SLEEPTIME)
+					gs.randomMove(validMoves)
+					moveMade = True
+					
+			else:
+				if gs.whiteMove == False and BLACKAI:
+					time.sleep(SLEEPTIME)
+					gs.AI(validMoves)
+					moveMade = True
+				elif gs.whiteMove == True and WHITEAI:
+					time.sleep(SLEEPTIME)
+					gs.AI(validMoves)
+					moveMade = True
 
 		if moveMade and not gs.checkmate and not gs.stalemate:
 			validMoves = gs.getValidMoves()

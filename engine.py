@@ -661,7 +661,6 @@ class GameState():
 		if self.whiteMove:
 			sys.stdout.write("\n\nCalculating White Move...\n")
 			sys.stdout.flush()
-			#self.randomMove(moves)
 			if len(self.moveLog) < 7:
 				self.miniMax(moves)
 			else:
@@ -669,11 +668,12 @@ class GameState():
 		else:
 			sys.stdout.write("\n\nCalculating Black Move...\n")
 			sys.stdout.flush()
-			#self.randomMove(moves)
 			if len(self.moveLog) < 7:
 				self.maxMini(moves)
 			else:
 				self.maxMiniAB(moves)
+		self.getValidMoves()
+		self.inCheck()
 	
 	def miniMax(self, moves): #FOR WHITE TURN
 		#ANALYTICS
@@ -786,7 +786,7 @@ class GameState():
 						
 						if blackMoveScore < beta:
 							beta = blackMoveScore
-						if blackMoveScore < alpha:
+						if alpha >= beta:
 							j = len(oppMoves)
 						totalCalcs = totalCalcs + 1 #ANALYTICS
 						self.undoMove() #undo first black move
@@ -811,6 +811,7 @@ class GameState():
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
 		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.boardScore))
+		sys.stdout.write("\nNotation Log: {}".format(self.notationLog))
 		sys.stdout.flush()
 		
 	def maxMini(self, moves): #FOR BLACK TURN
@@ -925,7 +926,7 @@ class GameState():
 						
 						if whiteMoveScore > alpha:
 							alpha = whiteMoveScore
-						if whiteMoveScore > beta:
+						if alpha >= beta:
 							j = len(oppMoves)
 						totalCalcs = totalCalcs + 1 #ANALYTICS
 						self.undoMove() #undo first black move
@@ -950,6 +951,7 @@ class GameState():
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
 		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.boardScore))
+		sys.stdout.write("\nNotation Log: {}".format(self.notationLog))
 		sys.stdout.flush()
 	
 	def randomMove(self, moves):
