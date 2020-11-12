@@ -371,6 +371,18 @@ class GameState():
 	#THREEFOLD REPETITION
 	'''		
 	def isOtherStalemate(self):
+	
+		#FIFTY-MOVE RULE 
+		fiftyMoveStalemate = True
+		if len(self.notationLog) > 50:
+			for i in range(len(self.notationLog)-1, len(self.notationLog)-51, -1):
+				if 'x' in self.notationLog[i] or '=' in self.notationLog:
+					fiftyMoveStalemate = False
+			if fiftyMoveStalemate:
+				return True
+		
+		
+		#Impossibility of checkmate
 		oneKnight = False
 		
 		oneWhiteBishop = False
@@ -383,7 +395,6 @@ class GameState():
 		
 		onlyKing = True
 		
-		#Impossibility of checkmate
 		for row in range(0,8):
 			for col in range(0,8):
 				if self.board[row][col] != '-':
@@ -419,17 +430,7 @@ class GameState():
 					if self.board[row][col][1] != 'k':
 						onlyKing = False
 		
-		#FIFTY-MOVE RULE 
-		''''''
-		fiftyMoveStalemate = True
-		if len(self.notationLog) > 50:
-			for i in range(len(self.notationLog)-1, len(self.notationLog)-51, -1):
-				if 'x' in self.notationLog[i] or '=' in self.notationLog:
-					fiftyMoveStalemate = False
-			if fiftyMoveStalemate:
-				sys.stdout.write("\n\n\nFIFTY-MOVE RULE STALEMATE HIT!!!\nNotationLog: {}".format(self.notationLog))
-				sys.stdout.flush()
-				return True
+		
 		
 			
 		#K,B vs K,B (Bishops on same color)
@@ -658,19 +659,21 @@ class GameState():
 			f.write('{}\n'.format(moveFlagHistory))
 	
 	def AI(self, moves):
-		if self.compareGameHistory()[0] == False: #If result not found do miniMax/maxMini
+		if self.compareGameHistory(moves) == False: #If result not found do miniMax/maxMini
 		
 			
 			if self.whiteMove:
 				sys.stdout.write("\n\nCalculating White Move...\n")
 				sys.stdout.flush()
-				self.miniMax(moves)
+				self.randomMove(moves)
+				#self.miniMax(moves)
 			else:
 				sys.stdout.write("\n\nCalculating Black Move...\n")
 				sys.stdout.flush()
-				self.maxMini(moves)
+				self.randomMove(moves)
+				#self.maxMini(moves)
 	
-	def compareGameHistory(self):
+	def compareGameHistory(self, moves):
 		
 		if self.whiteMove:
 			pass
@@ -680,8 +683,8 @@ class GameState():
 		
 		
 		if True:
-			return (False, None)
-		return (True, None) #returns Move()
+			return False
+		return True, None #returns Move()
 	
 	def miniMax(self, moves): #FOR WHITE TURN
 		#ANALYTICS
