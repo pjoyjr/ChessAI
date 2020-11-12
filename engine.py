@@ -658,19 +658,91 @@ class GameState():
 			f.write('{}\n'.format(moveFlagHistory))
 	
 	def AI(self, moves):
-		
 		if self.whiteMove:
 			sys.stdout.write("\n\nCalculating White Move...\n")
 			sys.stdout.flush()
 			#self.randomMove(moves)
-			self.miniMax(moves)
+			if len(self.moveLog) < 7:
+				self.miniMax(moves)
+			else:
+				self.miniMaxAB(moves)
 		else:
 			sys.stdout.write("\n\nCalculating Black Move...\n")
 			sys.stdout.flush()
-			self.randomMove(moves)
-			#self.maxMini(moves)
+			#self.randomMove(moves)
+			if len(self.moveLog) < 7:
+				self.maxMini(moves)
+			else:
+				self.maxMiniAB(moves)
 	
 	def miniMax(self, moves): #FOR WHITE TURN
+		#ANALYTICS
+		startTime = time.perf_counter() 
+		totalCalcs = 0 
+		
+		firstSetScores = []
+		bestMoveIndex = []
+		finalIndex = -1
+		
+		if len(moves) == 1:
+			self.makeMove(moves[0], moves)
+		else:
+			priorEval = self.boardScore
+			originalNotationLog = self.notationLog[:]
+			originalMoveLog = self.moveLog[:]
+			
+			#first white move
+			for i in range(0, len(moves)):
+				self.makeMove(moves[i], moves) 
+				secondSet = self.getValidMoves()
+				secondSetScores = []
+				
+				#if no moves after 1st white move
+				if len(secondSet) == 0: 
+					firstSetScores.append(self.evaluateBoard(priorEval), secondSet)
+					totalCalcs = totalCalcs + 1 #ANALYTICS
+				else:	
+				
+					#first black move
+					for j in range(0, len(secondSet)):
+						self.makeMove(secondSet[j], secondSet) 
+						thirdSet = self.getValidMoves()
+						
+						#if no moves after 1st black move
+						if len(thirdSet) == 0:  
+							secondSetScores.append(self.evaluateBoard(priorEval, thirdSet))
+							totalCalcs = totalCalcs + 1 #ANALYTICS
+						else:
+							secondSetScores.append(self.evaluateBoard(priorEval, thirdSet))
+							totalCalcs = totalCalcs + 1 #ANALYTICS
+								
+						self.undoMove() #undo first black move
+					firstSetScores.append(min(secondSetScores))
+				self.undoMove() #undo first white move
+				
+			bestMoveScore = max(firstSetScores)
+			for z in range(0,len(firstSetScores)):
+				if firstSetScores[z] == bestMoveScore:
+					bestMoveIndex.append(z)
+			
+			finalIndex = bestMoveIndex[random.randint(0,len(bestMoveIndex)-1)]
+			
+			self.moveLog = originalMoveLog
+			self.notationLog = originalNotationLog
+			self.makeMove(moves[finalIndex], moves)
+		
+		#ANALYTICS
+		endTime = time.perf_counter() 
+		totalTime = endTime - startTime
+				
+		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}\nFinal Score Index: {}\n".format(firstSetScores, bestMoveIndex, finalIndex))
+		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
+		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
+		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.boardScore))
+		sys.stdout.write("\nNotation Log: {}".format(self.notationLog))
+		sys.stdout.flush()
+		
+	def miniMaxAB(self, moves): #FOR WHITE TURN
 		#ANALYTICS
 		startTime = time.perf_counter() 
 		totalCalcs = 0 
@@ -754,8 +826,6 @@ class GameState():
 		if len(moves) == 1:
 			self.makeMove(moves[0], moves)
 		else:
-			alpha = 0
-			beta = 0
 			priorEval = self.boardScore
 			originalNotationLog = self.notationLog[:]
 			originalMoveLog = self.moveLog[:]
@@ -811,6 +881,76 @@ class GameState():
 		sys.stdout.write("\nNotation Log: {}".format(self.notationLog))
 		sys.stdout.flush()	
 
+	def maxMiniAB(self, moves): #FOR WHITE TURN
+		#ANALYTICS
+		startTime = time.perf_counter() 
+		totalCalcs = 0 
+		
+		
+		if len(moves) == 1:
+			self.makeMove(moves[0], moves)
+		else:
+			priorEval = self.boardScore
+			v = INFINITY #score of best move
+			vi = -1 # index of best move
+			alpha = -INFINITY
+			beta = INFINITY
+			
+			originalNotationLog = self.notationLog[:]
+			originalMoveLog = self.moveLog[:]
+			
+			#first white move
+			i = 0
+			while i < len(moves):
+				self.makeMove(moves[i], moves) 
+				oppMoves = self.getValidMoves()
+			
+				#if no moves after 1st white move
+				if len(oppMoves) == 0:
+					blackMoveScore = self.evaluateBoard(priorEval, oppMoves)
+					if blackMoveScore > v:
+						v = blackMoveScore
+						vi = i
+					totalCalcs = totalCalcs + 1 #ANALYTICS
+					
+				else:	
+				
+					#first black move
+					j = 0
+					alpha = -INFINITY
+					while j < len(oppMoves):
+						self.makeMove(oppMoves[j], oppMoves) 
+						myNextMoves = self.getValidMoves()
+						whiteMoveScore = self.evaluateBoard(priorEval, myNextMoves)
+						
+						if whiteMoveScore > alpha:
+							alpha = whiteMoveScore
+						if whiteMoveScore > beta:
+							j = len(oppMoves)
+						totalCalcs = totalCalcs + 1 #ANALYTICS
+						self.undoMove() #undo first black move
+						j = j + 1
+								
+				if beta < alpha:
+					beta = alpha
+					if beta < v:
+						v = alpha
+						vi = i
+				self.undoMove() #undo first white move
+				i = i + 1
+				
+			self.moveLog = originalMoveLog
+			self.notationLog = originalNotationLog
+			self.makeMove(moves[vi], moves)
+		
+		#ANALYTICS
+		endTime = time.perf_counter() 
+		totalTime = endTime - startTime
+		
+		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
+		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
+		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.boardScore))
+		sys.stdout.flush()
 	
 	def randomMove(self, moves):
 		rNum = random.randint(0,len(moves)-1)
@@ -903,11 +1043,12 @@ class GameState():
 						
 		#reward last move being castle white flag 8/9 black flag 13/14
 		castleReward = 0
-		if self.moveLog[len(self.moveLog)-1].flag == 8 or self.moveLog[len(self.moveLog)-1].flag == 9:
-			castleReward = 40
-		elif self.moveLog[len(self.moveLog)-1].flag == 13 or self.moveLog[len(self.moveLog)-1].flag == 14:
-			castleReward = -40
-			
+		if len(self.moveLog) > 0:
+			if self.moveLog[len(self.moveLog)-1].flag == 8 or self.moveLog[len(self.moveLog)-1].flag == 9:
+				castleReward = 60
+			elif self.moveLog[len(self.moveLog)-1].flag == 13 or self.moveLog[len(self.moveLog)-1].flag == 14:
+				castleReward = -60
+				
 		totalCount = materialCount * 1000 + pawnStructureCount + checkScore + castleReward
 		self.boardScore = totalCount
 		
