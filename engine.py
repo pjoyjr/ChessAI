@@ -53,6 +53,7 @@ class GameState():
 		self.moveLog = [] #store track of all moves
 		self.whiteKingLoc = (7, 4)
 		self.blackKingLoc = (0, 4)
+		self.boardScore = 0
 		
 
 
@@ -681,7 +682,7 @@ class GameState():
 		if len(moves) == 1:
 			self.makeMove(moves[0], moves)
 		else:
-			priorEval = self.evaluateBoard()
+			priorEval = self.boardScore
 			alpha = 0
 			beta = 0
 			originalNotationLog = self.notationLog[:]
@@ -695,11 +696,7 @@ class GameState():
 				
 				#if no moves after 1st white move
 				if len(secondSet) == 0: 
-					currentEval = self.evaluateBoard()
-					if self.checkmate or priorEval < 0:  #checkmate or good stalemate
-						firstSetScores.append(CHECKMATEVALUE)
-					else: #bad stalemate
-						firstSetScores.append(-STALEMATEVALUE)
+					firstSetScores.append(self.evaluateBoard(priorEval), secondSet)
 					totalCalcs = totalCalcs + 1 #ANALYTICS
 				else:	
 				
@@ -709,15 +706,11 @@ class GameState():
 						thirdSet = self.getValidMoves()
 						
 						#if no moves after 1st black move
-						if len(thirdSet) == 0: 
-							if self.checkmate or priorEval > 0:  #checkmate or good stalemate
-								secondSetScores.append(-CHECKMATEVALUE)
-							else: #bad stalemate
-								secondSetScores.append(STALEMATEVALUE)
+						if len(thirdSet) == 0:  
+							secondSetScores.append(self.evaluateBoard(priorEval, thirdSet))
 							totalCalcs = totalCalcs + 1 #ANALYTICS
 						else:
-							boardEval = self.evaluateBoard()
-							secondSetScores.append(boardEval)
+							secondSetScores.append(self.evaluateBoard(priorEval, thirdSet))
 							totalCalcs = totalCalcs + 1 #ANALYTICS
 								
 						self.undoMove() #undo first black move
@@ -742,7 +735,7 @@ class GameState():
 		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}\nFinal Score Index: {}\n".format(firstSetScores, bestMoveIndex, finalIndex))
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
-		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.evaluateBoard()))
+		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.boardScore))
 		sys.stdout.write("\nNotation Log: {}".format(self.notationLog))
 		sys.stdout.flush()
 		
@@ -761,7 +754,7 @@ class GameState():
 		else:
 			alpha = 0
 			beta = 0
-			priorEval = self.evaluateBoard()
+			priorEval = self.boardScore
 			originalNotationLog = self.notationLog[:]
 			originalMoveLog = self.moveLog[:]
 			
@@ -773,11 +766,7 @@ class GameState():
 				
 				#if no moves after 1st black move
 				if len(secondSet) == 0: 
-					currentEval = self.evaluateBoard()
-					if self.checkmate or priorEval > 0:  #checkmate or good stalemate
-						firstSetScores.append(-CHECKMATEVALUE)
-					else: #bad stalemate
-						firstSetScores.append(STALEMATEVALUE)
+					firstSetScores.append(self.evaluateBoard(priorEval, secondSet))
 					totalCalcs = totalCalcs + 1 #ANALYTICS
 				else:	
 				
@@ -788,14 +777,10 @@ class GameState():
 						
 						#if no moves after 1st white move
 						if len(thirdSet) == 0: 
-							if self.checkmate or priorEval < 0:  #checkmate or good stalemate
-								secondSetScores.append(CHECKMATEVALUE)
-							else: #bad stalemate
-								secondSetScores.append(-STALEMATEVALUE)
+							secondSetScores.append(self.evaluateBoard(priorEval, thirdSet))
 							totalCalcs = totalCalcs + 1 #ANALYTICS
 						else:
-							boardEval = self.evaluateBoard()
-							secondSetScores.append(boardEval)
+							secondSetScores.append(self.evaluateBoard(priorEval, thirdSet))
 							totalCalcs = totalCalcs + 1 #ANALYTICS
 								
 						self.undoMove() #undo 1st white move
@@ -820,7 +805,7 @@ class GameState():
 		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}\nFinal Score Index: {}\n".format(firstSetScores, bestMoveIndex, finalIndex))
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
-		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.evaluateBoard()))
+		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.boardScore))
 		sys.stdout.write("\nNotation Log: {}".format(self.notationLog))
 		sys.stdout.flush()	
 
@@ -829,8 +814,9 @@ class GameState():
 		rNum = random.randint(0,len(moves)-1)
 		self.makeMove(moves[rNum], moves)
 		
-	# (Material Count * 1000) + Pawn Structure
-	def evaluateBoard(self):
+	# ((Material Count * 1000) + Pawn Structure + check) / 1000
+	def evaluateBoard(self, priorScore, nextMoves):
+	
 		pieceValue = {'q': 9, 'r': 5, 'b': 3, 'n': 3, 'p': 1, 'k': 100}
 		materialCount = 0
 		pawnStructureCount = 0
@@ -891,4 +877,25 @@ class GameState():
 								pawnStructureCount = pawnStructureCount + 4
 						
 		totalCount = materialCount * 1000 + pawnStructureCount
-		return totalCount
+		self.boardScore = totalCount
+		
+		if len(nextMoves) == 0 or self.isOtherStalemate():
+			if self.whiteMove:
+				if self.checkmate or priorScore > self.boardScore:  #checkmate or good stalemate
+					self.boardScore = -CHECKMATEVALUE
+				else: #bad stalemate
+					self.boardScore = STALEMATEVALUE
+			else:
+				if self.checkmate or priorScore < self.boardScore:  #checkmate or good stalemate
+					self.boardScore = CHECKMATEVALUE
+				else: #bad stalemate
+					self.boardScore = -STALEMATEVALUE
+		elif self.check:
+			if self.whiteMove:
+				self.boardScore = self.boardScore - 50
+			else:
+				self.boardScore = self.boardScore + 50
+		
+		self.boardScore = self.boardScore / 1000
+		return self.boardScore
+			

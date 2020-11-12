@@ -112,6 +112,7 @@ def main():
 
 		if moveMade and not gs.checkmate and not gs.stalemate:
 			validMoves = gs.getValidMoves()
+			gs.evaluateBoard(gs.boardScore, validMoves)
 			moveMade = False	
 			
 		if (gs.checkmate or gs.stalemate) and AUTOMATIC:
