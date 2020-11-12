@@ -3,8 +3,8 @@ import random
 
 import sys, time
 
-CHECKMATEVALUE = 999999
-STALEMATEVALUE = 100000
+CHECKMATEVALUE = 9999999
+STALEMATEVALUE = 1000000
 
 class GameState():
 
@@ -644,9 +644,7 @@ class GameState():
 			moveIDHistory.append(move.moveID)
 			moveFlagHistory.append(move.flag)
 		
-		
 		sys.stdout.write("\n\nWriting to file...")
-		sys.stdout.write("\nMoveID Length: {}, Move Flag Length: {}, Notation Length: {}\n".format(len(moveIDHistory), len(moveFlagHistory), len(self.notationLog)))
 		sys.stdout.flush()
 		
 		with open(fname, 'a') as f:
@@ -659,98 +657,89 @@ class GameState():
 			f.write('{}\n'.format(moveFlagHistory))
 	
 	def AI(self, moves):
-		if self.compareGameHistory(moves) == False: #If result not found do miniMax/maxMini
-		
-			
-			if self.whiteMove:
-				sys.stdout.write("\n\nCalculating White Move...\n")
-				sys.stdout.flush()
-				#self.randomMove(moves)
-				self.miniMax(moves)
-			else:
-				sys.stdout.write("\n\nCalculating Black Move...\n")
-				sys.stdout.flush()
-				#self.randomMove(moves)
-				self.maxMini(moves)
-		
-		self.getValidMoves()
-	
-	def compareGameHistory(self, moves):
 		
 		if self.whiteMove:
-			pass
+			sys.stdout.write("\n\nCalculating White Move...\n")
+			sys.stdout.flush()
+			#self.randomMove(moves)
+			self.miniMax(moves)
 		else:
-			pass
-		
-		
-		
-		if True:
-			return False
-		return True, None #returns Move()
+			sys.stdout.write("\n\nCalculating Black Move...\n")
+			sys.stdout.flush()
+			#self.randomMove(moves)
+			self.maxMini(moves)
 	
 	def miniMax(self, moves): #FOR WHITE TURN
 		#ANALYTICS
 		startTime = time.perf_counter() 
 		totalCalcs = 0 
 		
-		originalNotationLog = self.notationLog[:]
-		originalMoveLog = self.moveLog[:]
-		priorEval = self.evaluateBoard()
 		firstSetScores = []
-		alpha = 0
-		beta = 0
-		
-		for i in range(0, len(moves)):
-			self.makeMove(moves[i], moves) #first white move
-			secondSet = self.getValidMoves()
-			secondSetScores = []
-			
-			if len(secondSet) == 0: #if no moves after 1st white move
-				currentEval = self.evaluateBoard()
-				if self.checkmate or priorEval < 0:  #checkmate or good stalemate
-					firstSetScores.append(CHECKMATEVALUE)
-				else: #bad stalemate
-					firstSetScores.append(-STALEMATEVALUE)
-				totalCalcs = totalCalcs + 1 #ANALYTICS
-			else:	
-				for j in range(0, len(secondSet)):
-					self.makeMove(secondSet[j], secondSet) #first black move
-					thirdSet = self.getValidMoves()
-					if len(thirdSet) == 0: #if no moves after 1st black move
-						if self.checkmate or priorEval > 0:  #checkmate or good stalemate
-							secondSetScores.append(-CHECKMATEVALUE)
-						else: #bad stalemate
-							secondSetScores.append(STALEMATEVALUE)
-						totalCalcs = totalCalcs + 1 #ANALYTICS
-					else:
-						boardEval = self.evaluateBoard()
-						secondSetScores.append(boardEval)
-						totalCalcs = totalCalcs + 1 #ANALYTICS
-							
-					self.undoMove()
-				firstSetScores.append(min(secondSetScores))
-			self.undoMove()
-			
-		bestMoveScore = max(firstSetScores)
 		bestMoveIndex = []
-		for z in range(0,len(firstSetScores)):
-			if firstSetScores[z] == bestMoveScore:
-				bestMoveIndex.append(z)
+		finalIndex = -1
 		
-		finalIndex = bestMoveIndex[random.randint(0,len(bestMoveIndex)-1)]
+		if len(moves) == 1:
+			self.makeMove(moves[0], moves)
+		else:
+			priorEval = self.evaluateBoard()
+			alpha = 0
+			beta = 0
+			originalNotationLog = self.notationLog[:]
+			originalMoveLog = self.moveLog[:]
+			
+			#first white move
+			for i in range(0, len(moves)):
+				self.makeMove(moves[i], moves) 
+				secondSet = self.getValidMoves()
+				secondSetScores = []
+				
+				#if no moves after 1st white move
+				if len(secondSet) == 0: 
+					currentEval = self.evaluateBoard()
+					if self.checkmate or priorEval < 0:  #checkmate or good stalemate
+						firstSetScores.append(CHECKMATEVALUE)
+					else: #bad stalemate
+						firstSetScores.append(-STALEMATEVALUE)
+					totalCalcs = totalCalcs + 1 #ANALYTICS
+				else:	
+				
+					#first black move
+					for j in range(0, len(secondSet)):
+						self.makeMove(secondSet[j], secondSet) 
+						thirdSet = self.getValidMoves()
+						
+						#if no moves after 1st black move
+						if len(thirdSet) == 0: 
+							if self.checkmate or priorEval > 0:  #checkmate or good stalemate
+								secondSetScores.append(-CHECKMATEVALUE)
+							else: #bad stalemate
+								secondSetScores.append(STALEMATEVALUE)
+							totalCalcs = totalCalcs + 1 #ANALYTICS
+						else:
+							boardEval = self.evaluateBoard()
+							secondSetScores.append(boardEval)
+							totalCalcs = totalCalcs + 1 #ANALYTICS
+								
+						self.undoMove() #undo first black move
+					firstSetScores.append(min(secondSetScores))
+				self.undoMove() #undo first white move
+				
+			bestMoveScore = max(firstSetScores)
+			for z in range(0,len(firstSetScores)):
+				if firstSetScores[z] == bestMoveScore:
+					bestMoveIndex.append(z)
+			
+			finalIndex = bestMoveIndex[random.randint(0,len(bestMoveIndex)-1)]
+			
+			self.moveLog = originalMoveLog
+			self.notationLog = originalNotationLog
+			self.makeMove(moves[finalIndex], moves)
 		
 		#ANALYTICS
 		endTime = time.perf_counter() 
 		totalTime = endTime - startTime
-		
-		self.moveLog = originalMoveLog
-		self.notationLog = originalNotationLog
-		
+				
 		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}\nFinal Score Index: {}\n".format(firstSetScores, bestMoveIndex, finalIndex))
-		sys.stdout.flush()	
-		
-		self.makeMove(moves[finalIndex], moves)
-		
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
 		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.evaluateBoard()))
@@ -762,64 +751,73 @@ class GameState():
 		startTime = time.perf_counter() 
 		totalCalcs = 0 
 		
-		originalNotationLog = self.notationLog[:]
-		originalMoveLog = self.moveLog[:]
-		priorEval = self.evaluateBoard()
 		firstSetScores = []
-		alpha = 0
-		beta = 0
-		
-		for i in range(0, len(moves)):
-			self.makeMove(moves[i], moves) #first black move
-			secondSet = self.getValidMoves()
-			secondSetScores = []
-			
-			if len(secondSet) == 0: #if no moves after 1st black move
-				currentEval = self.evaluateBoard()
-				if self.checkmate or priorEval > 0:  #checkmate or good stalemate
-					firstSetScores.append(-CHECKMATEVALUE)
-				else: #bad stalemate
-					firstSetScores.append(STALEMATEVALUE)
-				totalCalcs = totalCalcs + 1 #ANALYTICS
-			else:	
-				for j in range(0, len(secondSet)):
-					self.makeMove(secondSet[j], secondSet) #first white move
-					thirdSet = self.getValidMoves()
-					if len(thirdSet) == 0: #if no moves after 1st white move
-						if self.checkmate or priorEval < 0:  #checkmate or good stalemate
-							secondSetScores.append(CHECKMATEVALUE)
-						else: #bad stalemate
-							secondSetScores.append(-STALEMATEVALUE)
-						totalCalcs = totalCalcs + 1 #ANALYTICS
-					else:
-						boardEval = self.evaluateBoard()
-						secondSetScores.append(boardEval)
-						totalCalcs = totalCalcs + 1 #ANALYTICS
-							
-					self.undoMove()
-				firstSetScores.append(max(secondSetScores))
-			self.undoMove()
-			
-		bestMoveScore = min(firstSetScores)
 		bestMoveIndex = []
-		for z in range(0,len(firstSetScores)):
-			if firstSetScores[z] == bestMoveScore:
-				bestMoveIndex.append(z)
+		finalIndex = -1
 		
-		finalIndex = bestMoveIndex[random.randint(0,len(bestMoveIndex)-1)]
+		
+		if len(moves) == 1:
+			self.makeMove(moves[0], moves)
+		else:
+			alpha = 0
+			beta = 0
+			priorEval = self.evaluateBoard()
+			originalNotationLog = self.notationLog[:]
+			originalMoveLog = self.moveLog[:]
+			
+			#first black move
+			for i in range(0, len(moves)):
+				self.makeMove(moves[i], moves)
+				secondSet = self.getValidMoves()
+				secondSetScores = []
+				
+				#if no moves after 1st black move
+				if len(secondSet) == 0: 
+					currentEval = self.evaluateBoard()
+					if self.checkmate or priorEval > 0:  #checkmate or good stalemate
+						firstSetScores.append(-CHECKMATEVALUE)
+					else: #bad stalemate
+						firstSetScores.append(STALEMATEVALUE)
+					totalCalcs = totalCalcs + 1 #ANALYTICS
+				else:	
+				
+					#first white move
+					for j in range(0, len(secondSet)):
+						self.makeMove(secondSet[j], secondSet) 
+						thirdSet = self.getValidMoves()
+						
+						#if no moves after 1st white move
+						if len(thirdSet) == 0: 
+							if self.checkmate or priorEval < 0:  #checkmate or good stalemate
+								secondSetScores.append(CHECKMATEVALUE)
+							else: #bad stalemate
+								secondSetScores.append(-STALEMATEVALUE)
+							totalCalcs = totalCalcs + 1 #ANALYTICS
+						else:
+							boardEval = self.evaluateBoard()
+							secondSetScores.append(boardEval)
+							totalCalcs = totalCalcs + 1 #ANALYTICS
+								
+						self.undoMove() #undo 1st white move
+					firstSetScores.append(max(secondSetScores))
+				self.undoMove() #undo 1st black move
+				
+			bestMoveScore = min(firstSetScores)
+			for z in range(0,len(firstSetScores)):
+				if firstSetScores[z] == bestMoveScore:
+					bestMoveIndex.append(z)
+			
+			finalIndex = bestMoveIndex[random.randint(0,len(bestMoveIndex)-1)]
+			
+			self.moveLog = originalMoveLog
+			self.notationLog = originalNotationLog
+			self.makeMove(moves[finalIndex], moves)
 		
 		#ANALYTICS
 		endTime = time.perf_counter() 
 		totalTime = endTime - startTime
 		
-		self.moveLog = originalMoveLog
-		self.notationLog = originalNotationLog
-		
 		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}\nFinal Score Index: {}\n".format(firstSetScores, bestMoveIndex, finalIndex))
-		sys.stdout.flush()		
-		
-		self.makeMove(moves[finalIndex], moves)
-		
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
 		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.evaluateBoard()))
@@ -831,16 +829,17 @@ class GameState():
 		rNum = random.randint(0,len(moves)-1)
 		self.makeMove(moves[rNum], moves)
 		
-	# (Material Count * 100) + Pawn Structure
+	# (Material Count * 1000) + Pawn Structure
 	def evaluateBoard(self):
 		pieceValue = {'q': 9, 'r': 5, 'b': 3, 'n': 3, 'p': 1, 'k': 100}
 		materialCount = 0
 		pawnStructureCount = 0
 		
 		checkPawnStructure = False
-		if len(self.moveLog) > 8: #Not early Game, after first four turns
+		if len(self.moveLog) > 7: #Not early Game, after first four turns
 			checkPawnStructure = True
-			
+
+		
 		for row in range(0,8):
 			for col in range(0,8):
 				if self.board[row][col] != '-':
@@ -850,36 +849,46 @@ class GameState():
 						materialCount = materialCount + pieceValue[pieceName]
 						#Pawn Structures 
 						if self.board[row][col][1] == 'p' and checkPawnStructure:
-							if col + 1 < 8 and row + 1 < 8:
-								if self.board[row+1][col+1] == 'wp':
-									pawnStructureCount = pawnStructureCount + 1
-							if col + 1 < 8:
+							if col + 1 < 8: 
 								if self.board[row-1][col+1] == 'wp':
-									pawnStructureCount = pawnStructureCount + 1
+									pawnStructureCount = pawnStructureCount + 2
 								if self.board[row][col+1] == 'wp':
 									pawnStructureCount = pawnStructureCount + 1
-							if row + 1 < 8:
-								if self.board[row+1][col] == 'wp':
-									pawnStructureCount = pawnStructureCount - 1
+								if self.board[row+1][col+1] == 'wp':
+									pawnStructureCount = pawnStructureCount + 3
+							if col - 1 >= 0:
+								if self.board[row-1][col-1] == 'wp':
+									pawnStructureCount = pawnStructureCount + 2
+								if self.board[row][col-1] == 'wp':
+									pawnStructureCount = pawnStructureCount + 1
+								if self.board[row+1][col-1] == 'wp':
+									pawnStructureCount = pawnStructureCount + 3
+							if self.board[row+1][col] == 'wp':
+								pawnStructureCount = pawnStructureCount - 4
 							if self.board[row-1][col] == 'wp':
-								pawnStructureCount = pawnStructureCount - 1
+								pawnStructureCount = pawnStructureCount - 4
 					else:
 						materialCount = materialCount - pieceValue[pieceName]
 						#Pawn Structures 
 						if self.board[row][col][1] == 'p' and checkPawnStructure:
-							if col + 1 < 8 and row + 1 < 8:
-								if self.board[row+1][col+1] == 'bp':
+							if col + 1 < 8: 
+								if self.board[row-1][col+1] == 'wp':
+									pawnStructureCount = pawnStructureCount - 3
+								if self.board[row][col+1] == 'wp':
 									pawnStructureCount = pawnStructureCount - 1
-							if col + 1 < 8:
-								if self.board[row-1][col+1] == 'bp':
+								if self.board[row+1][col+1] == 'wp':
+									pawnStructureCount = pawnStructureCount - 2
+							if col - 1 >= 0:
+								if self.board[row-1][col-1] == 'wp':
+									pawnStructureCount = pawnStructureCount - 3
+								if self.board[row][col-1] == 'wp':
 									pawnStructureCount = pawnStructureCount - 1
-								if self.board[row][col+1] == 'bp':
-									pawnStructureCount = pawnStructureCount - 1
-							if row + 1 < 8:
-								if self.board[row+1][col] == 'bp':
-									pawnStructureCount = pawnStructureCount + 1
-							if self.board[row-1][col] == 'bp':
-								pawnStructureCount = pawnStructureCount + 1
+								if self.board[row+1][col-1] == 'wp':
+									pawnStructureCount = pawnStructureCount - 2
+							if self.board[row+1][col] == 'wp':
+								pawnStructureCount = pawnStructureCount + 4
+							if self.board[row-1][col] == 'wp':
+								pawnStructureCount = pawnStructureCount + 4
 						
-		totalCount = materialCount * 100 + pawnStructureCount
+		totalCount = materialCount * 1000 + pawnStructureCount
 		return totalCount
