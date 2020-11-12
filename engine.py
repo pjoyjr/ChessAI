@@ -372,11 +372,11 @@ class GameState():
 	'''		
 	def isOtherStalemate(self):
 	
-		#FIFTY-MOVE RULE 
+		#FIFTY-MOVE RULE No pawn movement or captures in last 50 moves
 		fiftyMoveStalemate = True
-		if len(self.notationLog) > 50:
-			for i in range(len(self.notationLog)-1, len(self.notationLog)-51, -1):
-				if 'x' in self.notationLog[i] or '=' in self.notationLog:
+		if len(self.moveLog) > 50:
+			for i in range(len(self.moveLog)-1, len(self.moveLog)-51, -1):
+				if self.moveLog[i].pieceCaptured != '-' or self.moveLog[i].pieceMoved == 'bp' or self.moveLog[i].pieceMoved == 'wp':
 					fiftyMoveStalemate = False
 			if fiftyMoveStalemate:
 				return True
@@ -665,13 +665,15 @@ class GameState():
 			if self.whiteMove:
 				sys.stdout.write("\n\nCalculating White Move...\n")
 				sys.stdout.flush()
-				self.randomMove(moves)
-				#self.miniMax(moves)
+				#self.randomMove(moves)
+				self.miniMax(moves)
 			else:
 				sys.stdout.write("\n\nCalculating Black Move...\n")
 				sys.stdout.flush()
-				self.randomMove(moves)
-				#self.maxMini(moves)
+				#self.randomMove(moves)
+				self.maxMini(moves)
+		
+		self.getValidMoves()
 	
 	def compareGameHistory(self, moves):
 		
@@ -817,6 +819,7 @@ class GameState():
 		sys.stdout.flush()		
 		
 		self.makeMove(moves[finalIndex], moves)
+		
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
 		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.evaluateBoard()))
@@ -834,6 +837,10 @@ class GameState():
 		materialCount = 0
 		pawnStructureCount = 0
 		
+		checkPawnStructure = False
+		if len(self.moveLog) > 8: #Not early Game, after first four turns
+			checkPawnStructure = True
+			
 		for row in range(0,8):
 			for col in range(0,8):
 				if self.board[row][col] != '-':
@@ -842,7 +849,7 @@ class GameState():
 					if self.board[row][col][0] == 'w':
 						materialCount = materialCount + pieceValue[pieceName]
 						#Pawn Structures 
-						if self.board[row][col][1] == 'p':
+						if self.board[row][col][1] == 'p' and checkPawnStructure:
 							if col + 1 < 8 and row + 1 < 8:
 								if self.board[row+1][col+1] == 'wp':
 									pawnStructureCount = pawnStructureCount + 1
@@ -859,7 +866,7 @@ class GameState():
 					else:
 						materialCount = materialCount - pieceValue[pieceName]
 						#Pawn Structures 
-						if self.board[row][col][1] == 'p':
+						if self.board[row][col][1] == 'p' and checkPawnStructure:
 							if col + 1 < 8 and row + 1 < 8:
 								if self.board[row+1][col+1] == 'bp':
 									pawnStructureCount = pawnStructureCount - 1
