@@ -896,6 +896,12 @@ class GameState():
 			else:
 				self.boardScore = self.boardScore + 50
 		
-		self.boardScore = self.boardScore / 1000
-		return self.boardScore
+		#reward last move being castle white flag 8/9 black flag 13/14
+		if self.moveLog[len(self.moveLog)-1].flag == 8 or self.moveLog[len(self.moveLog)-1].flag == 9:
+			self.boardScore = self.boardScore + 50
+		elif self.moveLog[len(self.moveLog)-1].flag == 13 or self.moveLog[len(self.moveLog)-1].flag == 14:
+			self.boardScore = self.boardScore - 50
 			
+		
+		self.boardScore = self.boardScore / 1000
+		return self.boardScore	
