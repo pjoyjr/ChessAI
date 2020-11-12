@@ -3,7 +3,7 @@ import random
 
 import sys, time
 
-CHECKMATEVALUE = 9999999
+INFINITY = 9999999
 STALEMATEVALUE = 1000000
 
 class GameState():
@@ -667,76 +667,78 @@ class GameState():
 		else:
 			sys.stdout.write("\n\nCalculating Black Move...\n")
 			sys.stdout.flush()
-			#self.randomMove(moves)
-			self.maxMini(moves)
+			self.randomMove(moves)
+			#self.maxMini(moves)
 	
 	def miniMax(self, moves): #FOR WHITE TURN
 		#ANALYTICS
 		startTime = time.perf_counter() 
 		totalCalcs = 0 
 		
-		firstSetScores = []
-		bestMoveIndex = []
-		finalIndex = -1
 		
 		if len(moves) == 1:
 			self.makeMove(moves[0], moves)
 		else:
 			priorEval = self.boardScore
-			alpha = 0
-			beta = 0
+			v = -INFINITY #score of best move
+			vi = -1 # index of best move
+			alpha = -INFINITY
+			beta = INFINITY
+			
 			originalNotationLog = self.notationLog[:]
 			originalMoveLog = self.moveLog[:]
 			
 			#first white move
-			for i in range(0, len(moves)):
+			i = 0
+			while i < len(moves):
 				self.makeMove(moves[i], moves) 
-				secondSet = self.getValidMoves()
-				secondSetScores = []
-				
+				oppMoves = self.getValidMoves()
+			
 				#if no moves after 1st white move
-				if len(secondSet) == 0: 
-					firstSetScores.append(self.evaluateBoard(priorEval), secondSet)
+				if len(oppMoves) == 0:
+					whiteMoveScore = self.evaluateBoard(priorEval, oppMoves)
+					if whiteMoveScore > v:
+						v = whiteMoveScore
+						vi = i
 					totalCalcs = totalCalcs + 1 #ANALYTICS
+					
 				else:	
 				
 					#first black move
-					for j in range(0, len(secondSet)):
-						self.makeMove(secondSet[j], secondSet) 
-						thirdSet = self.getValidMoves()
+					j = 0
+					beta = INFINITY
+					while j < len(oppMoves):
+						self.makeMove(oppMoves[j], oppMoves) 
+						myNextMoves = self.getValidMoves()
+						blackMoveScore = self.evaluateBoard(priorEval, myNextMoves)
 						
-						#if no moves after 1st black move
-						if len(thirdSet) == 0:  
-							secondSetScores.append(self.evaluateBoard(priorEval, thirdSet))
-							totalCalcs = totalCalcs + 1 #ANALYTICS
-						else:
-							secondSetScores.append(self.evaluateBoard(priorEval, thirdSet))
-							totalCalcs = totalCalcs + 1 #ANALYTICS
-								
+						if blackMoveScore < beta:
+							beta = blackMoveScore
+						if blackMoveScore < alpha:
+							j = len(oppMoves)
+						totalCalcs = totalCalcs + 1 #ANALYTICS
 						self.undoMove() #undo first black move
-					firstSetScores.append(min(secondSetScores))
+						j = j + 1
+								
+				if beta > alpha:
+					alpha = beta
+					if alpha > v:
+						v = beta
+						vi = i
 				self.undoMove() #undo first white move
+				i = i + 1
 				
-			bestMoveScore = max(firstSetScores)
-			for z in range(0,len(firstSetScores)):
-				if firstSetScores[z] == bestMoveScore:
-					bestMoveIndex.append(z)
-			
-			finalIndex = bestMoveIndex[random.randint(0,len(bestMoveIndex)-1)]
-			
 			self.moveLog = originalMoveLog
 			self.notationLog = originalNotationLog
-			self.makeMove(moves[finalIndex], moves)
+			self.makeMove(moves[vi], moves)
 		
 		#ANALYTICS
 		endTime = time.perf_counter() 
 		totalTime = endTime - startTime
-				
-		sys.stdout.write("\nFirstSetScores: {}\nBest Score Index: {}\nFinal Score Index: {}\n".format(firstSetScores, bestMoveIndex, finalIndex))
+		
 		sys.stdout.write("\nTotal moves calculated: {}".format(totalCalcs))
 		sys.stdout.write("\nTotal time taken: {}".format(totalTime))
 		sys.stdout.write("\nBoard Eval(+w/-b): {}".format(self.boardScore))
-		sys.stdout.write("\nNotation Log: {}".format(self.notationLog))
 		sys.stdout.flush()
 		
 	def maxMini(self, moves): #FOR BLACK TURN
@@ -814,9 +816,32 @@ class GameState():
 		rNum = random.randint(0,len(moves)-1)
 		self.makeMove(moves[rNum], moves)
 		
-	# ((Material Count * 1000) + Pawn Structure + check) / 1000
+	# ((Material Count * 1000) + Pawn Structure + checkScore + castleReward) / 1000
 	def evaluateBoard(self, priorScore, nextMoves):
-	
+		if len(nextMoves) == 0 or self.isOtherStalemate():
+				if self.whiteMove:
+					if self.checkmate or priorScore > self.boardScore:  #checkmate or good stalemate
+						self.boardScore = -INFINITY
+						return self.boardScore
+					else: #bad stalemate
+						self.boardScore = STALEMATEVALUE
+						return self.boardScore
+				else:
+					if self.checkmate or priorScore < self.boardScore:  #checkmate or good stalemate
+						self.boardScore = INFINITY
+						return self.boardScore
+					else: #bad stalemate
+						self.boardScore = -STALEMATEVALUE
+						return self.boardScore
+						
+		self.inCheck()
+		checkScore = 0
+		if self.check:
+			if self.whiteMove:
+				checkScore = -50
+			else:
+				checkScore = 50
+				
 		pieceValue = {'q': 9, 'r': 5, 'b': 3, 'n': 3, 'p': 1, 'k': 100}
 		materialCount = 0
 		pawnStructureCount = 0
@@ -876,32 +901,15 @@ class GameState():
 							if self.board[row-1][col] == 'wp':
 								pawnStructureCount = pawnStructureCount + 4
 						
-		totalCount = materialCount * 1000 + pawnStructureCount
-		self.boardScore = totalCount
-		
-		if len(nextMoves) == 0 or self.isOtherStalemate():
-			if self.whiteMove:
-				if self.checkmate or priorScore > self.boardScore:  #checkmate or good stalemate
-					self.boardScore = -CHECKMATEVALUE
-				else: #bad stalemate
-					self.boardScore = STALEMATEVALUE
-			else:
-				if self.checkmate or priorScore < self.boardScore:  #checkmate or good stalemate
-					self.boardScore = CHECKMATEVALUE
-				else: #bad stalemate
-					self.boardScore = -STALEMATEVALUE
-		elif self.check:
-			if self.whiteMove:
-				self.boardScore = self.boardScore - 50
-			else:
-				self.boardScore = self.boardScore + 50
-		
 		#reward last move being castle white flag 8/9 black flag 13/14
+		castleReward = 0
 		if self.moveLog[len(self.moveLog)-1].flag == 8 or self.moveLog[len(self.moveLog)-1].flag == 9:
-			self.boardScore = self.boardScore + 50
+			castleReward = 40
 		elif self.moveLog[len(self.moveLog)-1].flag == 13 or self.moveLog[len(self.moveLog)-1].flag == 14:
-			self.boardScore = self.boardScore - 50
+			castleReward = -40
 			
+		totalCount = materialCount * 1000 + pawnStructureCount + checkScore + castleReward
+		self.boardScore = totalCount
 		
 		self.boardScore = self.boardScore / 1000
 		return self.boardScore	
