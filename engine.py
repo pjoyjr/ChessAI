@@ -962,33 +962,19 @@ class GameState():
 	def evaluateBoard(self, priorScore, nextMoves):
 		if len(nextMoves) == 0 or self.isOtherStalemate():
 				if self.whiteMove:
-					if self.checkmate or priorScore > self.boardScore:  #checkmate or good stalemate
-						self.boardScore = -INFINITY
-						return self.boardScore
-					else: #bad stalemate
-						self.boardScore = STALEMATEVALUE
-						return self.boardScore
+					self.boardScore = -INFINITY if (self.checkmate or priorScore > self.boardScore) else STALEMATEVALUE  #checkmate or good stalemate
+					return self.boardScore
 				else:
-					if self.checkmate or priorScore < self.boardScore:  #checkmate or good stalemate
-						self.boardScore = INFINITY
-						return self.boardScore
-					else: #bad stalemate
-						self.boardScore = -STALEMATEVALUE
-						return self.boardScore
+					self.boardScore = INFINITY if (self.checkmate or priorScore < self.boardScore) else -STALEMATEVALUE  #checkmate or good stalemate
+					return self.boardScore
 						
 		self.inCheck()
 		checkScore = 0
 		if self.check:
-			if self.whiteMove:
-				checkScore = -50
-			else:
-				checkScore = 50
+			checkScore = -50 if self.whiteMove else 50
 				
 		pieceValue = {'q': 9, 'r': 5, 'b': 3, 'n': 3, 'p': 1, 'k': 100}
-		materialCount = 0
-		pawnStructureCount = 0
-		
-		checkPawnStructure = False
+		materialCount, pawnStructureCount, checkPawnStructure = 0, 0, False
 		if len(self.moveLog) > 7: #Not early Game, after first four turns
 			checkPawnStructure = True
 
