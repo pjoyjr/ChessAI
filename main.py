@@ -6,7 +6,11 @@ from GUI import GUI
 def main():
     board = chess.Board()
     gui = GUI(board)
-    gui.showBoard()
+    running = True
+    while gui.showBoard():
+        for move in board.legal_moves:
+            print(move)
+        print("\n\n\n")
 
     # board.legal_moves
 

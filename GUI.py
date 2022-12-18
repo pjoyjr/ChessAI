@@ -12,6 +12,10 @@ class GUI:
         self.piece_images = {}
         self.loadImages()
         self.board = __board
+        
+        self.sqSelected = () #holds coord of last click of user (tuple: row, col)
+        self.playerClicks = [] #list that keep track of player clicks (2 tuples[(6, 4), (4, 4)] 
+
 
     def loadImages(self):
         imgPath = "png\\"
@@ -50,12 +54,30 @@ class GUI:
                 self.screen.blit(self.piece_images[str(piece)], p.Rect(file*GUI_SQ_SIZE, rank*GUI_SQ_SIZE, GUI_SQ_SIZE, GUI_SQ_SIZE))     
 
     def showBoard(self):
-        running = True
-        while running:
-            for e in p.event.get():
-                if e.type == p.QUIT:
-                    running = False
-            self.drawSquares()
-            self.drawPieces()
-            self.clock.tick(FPS)
-            p.display.flip()
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                return False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos() # (x, y) location of mouse
+                col = location[0]//GUI_SQ_SIZE
+                row = location[1]//GUI_SQ_SIZE
+
+                if self.sqSelected == (row, col): #click same square twice
+                    self.sqSelected = ()
+                    self.playerClicks = []
+                else: #clicked a new square
+                    self.sqSelected = (row, col)
+                    self.playerClicks.append(self.sqSelected)
+
+                print(f"player clicks: {self.playerClicks}")
+                if len(self.playerClicks) == 2:
+                    print("Make Move")
+                    self.playerClicks = []
+           
+					
+        self.drawSquares()
+        self.drawPieces()
+        self.clock.tick(FPS)
+        p.display.flip()
+
+        return True
