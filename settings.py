@@ -5,7 +5,7 @@ GUI_SQ_SIZE = GUI_WIDTH // BOARD_DIM
 FPS = 18
 BOARD_COLOR_1='lightsalmon'
 BOARD_COLOR_2='plum'
-
+BOARD_COLOR_HIGHLIGHTED_TILES="palegoldenrod"
 
 IMG_PATH = "png\\"
 PIECE_IMG_MAPPING = {
@@ -23,13 +23,23 @@ PIECE_IMG_MAPPING = {
     "R": IMG_PATH + "Br.png",
 }
 
-RANK_MAPPING = {
-    0: "A",
-    1: "B",
-    2: "C",
-    3: "D",
-    4: "E",
-    5: "F",
-    6: "G",
-    7: "H",
+FILE_INT_TO_STR_MAPPING = {
+    0: "a",
+    1: "b",
+    2: "c",
+    3: "d",
+    4: "e",
+    5: "f",
+    6: "g",
+    7: "h",
+}
+FILE_STR_TO_INT_MAPPING = {
+    "a": 0,
+    "b": 1,
+    "c": 2,
+    "d": 3,
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": 7,
 }

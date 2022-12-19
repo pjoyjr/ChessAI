@@ -8,9 +8,6 @@ def main():
     gui = GUI(board)
     running = True
     while gui.showBoard():
-        # for move in board.legal_moves:
-        #     print(move)
-        # print("\n\n\n")
         pass
     # board.legal_moves
 
@@ -26,7 +23,7 @@ def main():
 
     # board.is_checkmate()
 
-    print(board)
+    # print(board)
 
 if __name__== "__main__":
     main() 

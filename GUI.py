@@ -14,7 +14,9 @@ class GUI:
         self.board = __board
         
         self.sqSelected = () #holds coord of last click of user (tuple: row, col)
-        self.playerClicks = [] #list that keep track of player clicks (2 tuples[(6, 4), (4, 4)] 
+        self.playerClicks = [] #list that keep track of player clicks (2 tuples[(6, 4), (4, 4)]
+
+        self.highlighted_tiles = []
 
 
     def loadImages(self):
@@ -37,9 +39,15 @@ class GUI:
         
         for col in range(0,BOARD_DIM):
             font = p.font.SysFont(None, 20)
-            text = font.render(RANK_MAPPING[col], True, p.Color("black"))
+            text = font.render(FILE_INT_TO_STR_MAPPING[col], True, p.Color("black"))
             self.screen.blit(text, (col*GUI_SQ_SIZE+2, BOARD_DIM*GUI_SQ_SIZE-15))
     
+    def drawHighlightMoves(self):
+        color = p.Color(BOARD_COLOR_HIGHLIGHTED_TILES)
+        for move in self.highlighted_tiles:
+            p.draw.rect(self.screen, color, p.Rect(FILE_STR_TO_INT_MAPPING[move[0]]*GUI_SQ_SIZE, (8-int(move[1]))*GUI_SQ_SIZE, GUI_SQ_SIZE, GUI_SQ_SIZE))
+				
+
     def drawSquares(self):
         colors = [p.Color(BOARD_COLOR_1), p.Color(BOARD_COLOR_2)]
         for row in range(BOARD_DIM):
@@ -61,24 +69,30 @@ class GUI:
                 return False
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos() # (x, y) location of mouse
-                row = location[0]//GUI_SQ_SIZE
-                col = location[1]//GUI_SQ_SIZE
-
-                if self.sqSelected == (col, row): #click same square twice
-                    self.sqSelected = ()
+                file_int = location[0]//GUI_SQ_SIZE
+                file_str = FILE_INT_TO_STR_MAPPING[file_int]
+                rank_int = location[1]//GUI_SQ_SIZE
+                rank_str = str(8-rank_int)
+                tile_name = file_str + rank_str
+                if self.sqSelected == tile_name: #click same square twice
+                    self.sqSelected = None
                     self.playerClicks = []
+                    self.highlighted_tiles = []
                 else: #clicked a new square
-                    self.sqSelected = (col, row)
+                    self.sqSelected = tile_name
                     self.playerClicks.append(self.sqSelected)
+                    print(self.playerClicks)
+                    for move in self.board.legal_moves:
+                        from_tile = str(move)[0] + str(move)[1]
+                        if (self.sqSelected == from_tile):
+                            self.highlighted_tiles.append(str(move)[2] + str(move)[3])
 
-                print(f"player clicks: {self.playerClicks}")
-                print(f"conversions: {abs(8-col)}, {row}")
-                if len(self.playerClicks) == 2:
-                    print("Make Move")
-                    self.playerClicks = []
-           
+                # if len(self.playerClicks) == 2:
+                #     print("Make Move")
+                #     self.playerClicks = []
 					
         self.drawSquares()
+        self.drawHighlightMoves()
         self.drawLines()
         self.drawLettersNumbers()
         self.drawPieces()
