@@ -18,25 +18,27 @@ class GUI:
 
 
     def loadImages(self):
-        imgPath = "png\\"
-        pieceMapping = {
-            "b": imgPath + "b.png",
-            "k": imgPath + "k.png",
-            "n": imgPath + "n.png",
-            "p": imgPath + "p.png",
-            "q": imgPath + "q.png",
-            "r": imgPath + "r.png",
-            "B": imgPath + "Bb.png",
-            "K": imgPath + "Bk.png",
-            "N": imgPath + "Bn.png",
-            "P": imgPath + "Bp.png",
-            "Q": imgPath + "Bq.png",
-            "R": imgPath + "Br.png",
-        }
         pieces = ['p', 'r', 'n', 'b', 'q', 'k', 'P', 'R', 'N', 'B', 'Q', 'K']
         for piece in pieces:
-            self.piece_images[piece] = p.transform.scale(p.image.load(pieceMapping[piece]), (GUI_SQ_SIZE, GUI_SQ_SIZE))
+            self.piece_images[piece] = p.transform.scale(p.image.load(PIECE_IMG_MAPPING[piece]), (GUI_SQ_SIZE, GUI_SQ_SIZE))
 
+    def drawLines(self):
+        color = p.Color("black")
+        for row in range(1,BOARD_DIM):
+            for col in range(1,BOARD_DIM):
+                p.draw.line(self.screen, color, (col*GUI_SQ_SIZE, 0), (col*GUI_SQ_SIZE, GUI_WIDTH), 2)
+                p.draw.line(self.screen, color, (0, row*GUI_SQ_SIZE), (GUI_HEIGHT, row*GUI_SQ_SIZE), 2)
+
+    def drawLettersNumbers(self):
+        for row in range(0,BOARD_DIM):
+            font = p.font.SysFont(None, 20)
+            text = font.render(str(abs(row-8)), True, p.Color("black"))
+            self.screen.blit(text, (0, row*GUI_SQ_SIZE+5))
+        
+        for col in range(0,BOARD_DIM):
+            font = p.font.SysFont(None, 20)
+            text = font.render(RANK_MAPPING[col], True, p.Color("black"))
+            self.screen.blit(text, (col*GUI_SQ_SIZE+2, BOARD_DIM*GUI_SQ_SIZE-15))
     
     def drawSquares(self):
         colors = [p.Color(BOARD_COLOR_1), p.Color(BOARD_COLOR_2)]
@@ -59,23 +61,26 @@ class GUI:
                 return False
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos() # (x, y) location of mouse
-                col = location[0]//GUI_SQ_SIZE
-                row = location[1]//GUI_SQ_SIZE
+                row = location[0]//GUI_SQ_SIZE
+                col = location[1]//GUI_SQ_SIZE
 
-                if self.sqSelected == (row, col): #click same square twice
+                if self.sqSelected == (col, row): #click same square twice
                     self.sqSelected = ()
                     self.playerClicks = []
                 else: #clicked a new square
-                    self.sqSelected = (row, col)
+                    self.sqSelected = (col, row)
                     self.playerClicks.append(self.sqSelected)
 
                 print(f"player clicks: {self.playerClicks}")
+                print(f"conversions: {abs(8-col)}, {row}")
                 if len(self.playerClicks) == 2:
                     print("Make Move")
                     self.playerClicks = []
            
 					
         self.drawSquares()
+        self.drawLines()
+        self.drawLettersNumbers()
         self.drawPieces()
         self.clock.tick(FPS)
         p.display.flip()
