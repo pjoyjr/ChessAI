@@ -15,8 +15,8 @@ class GUI:
         self.loadImages()
         self.board = __board
         
-        self.sqSelected = () #holds coord of last click of user (tuple: row, col)
-        self.playerClicks = [] #list that keep track of player clicks (2 tuples[(6, 4), (4, 4)]
+        self.sq_selected = () #holds coord of last click of user (tuple: row, col)
+        self.player_clicks = [] #list that keep track of player clicks (2 tuples[(6, 4), (4, 4)]
 
         self.highlighted_tiles = []
 
@@ -99,23 +99,38 @@ class GUI:
                     rank_int = (location[1]-GUI_BOARD_HEIGHT_OFFSET)//GUI_SQ_SIZE
                     rank_str = str(8-rank_int)
                     tile_name = file_str + rank_str
-                    if self.sqSelected == tile_name: #click same square twice
-                        self.sqSelected = None
-                        self.playerClicks = []
+                    if self.sq_selected == tile_name: #click same square twice
+                        self.sq_selected = None
+                        self.player_clicks = []
                         self.highlighted_tiles = []
                     else: #clicked a new square
                         self.highlighted_tiles = []
-                        self.sqSelected = tile_name
-                        self.playerClicks.append(self.sqSelected)
-                        print(self.playerClicks)
-                        for move in self.board.legal_moves:
-                            from_tile = str(move)[0] + str(move)[1]
-                            if (self.sqSelected == from_tile):
-                                self.highlighted_tiles.append(str(move)[2] + str(move)[3])
+                        self.sq_selected = tile_name
+                        self.player_clicks.append(self.sq_selected)
+                        print(f"player clicked: {self.player_clicks}")
 
-                    # if len(self.playerClicks) == 2:
-                    #     print("Make Move")
-                    #     self.playerClicks = []
+                        found_move = False
+
+                        if len(self.player_clicks) == 2:
+                            move_str = self.player_clicks[0] + self.player_clicks[1]
+                            print(move_str)
+                            for move in self.board.legal_moves:
+                                if move_str == str(move):
+                                    print("Good Move")
+                                    found_move = True
+                                    self.player_clicks = []
+                                    self.highlighted_tiles = []
+                                    #TODO: MAKE MOVE
+                            if found_move is False:
+                                self.player_clicks = [self.sq_selected]
+                        if len(self.player_clicks) == 1:
+                            for move in self.board.legal_moves:
+                                if tile_name == str(move)[0]+str(move)[1]:
+                                    self.highlighted_tiles.append(str(move)[2]+str(move)[3])
+                                
+                                
+
+                    
 					
         self.drawSquares()
         self.drawHighlightMoves()
