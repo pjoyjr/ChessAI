@@ -6,7 +6,7 @@ from sys import stdout
 class GUI:
     def __init__(self, __board):
         p.init()
-        self.screen = p.display.set_mode((GUI_WIDTH, GUI_HEIGHT))
+        self.screen = p.display.set_mode((GUI_BOARD_WIDTH, GUI_BOARD_HEIGHT+2*GUI_PIECE_CEMETARY_HEIGHT))
         self.clock = p.time.Clock()
         stdout.flush()
         self.piece_images = {}
@@ -28,19 +28,20 @@ class GUI:
         color = p.Color("black")
         for row in range(1,BOARD_DIM):
             for col in range(1,BOARD_DIM):
-                p.draw.line(self.screen, color, (col*GUI_SQ_SIZE, 0), (col*GUI_SQ_SIZE, GUI_WIDTH), 2)
-                p.draw.line(self.screen, color, (0, row*GUI_SQ_SIZE), (GUI_HEIGHT, row*GUI_SQ_SIZE), 2)
+                p.draw.line(self.screen, color, (col*GUI_SQ_SIZE, GUI_PIECE_CEMETARY_HEIGHT), (col*GUI_SQ_SIZE, GUI_BOARD_WIDTH+GUI_PIECE_CEMETARY_HEIGHT), 2)
+                #separate rows
+                p.draw.line(self.screen, color, (0, GUI_PIECE_CEMETARY_HEIGHT+row*GUI_SQ_SIZE), (GUI_BOARD_HEIGHT, GUI_PIECE_CEMETARY_HEIGHT+row*GUI_SQ_SIZE), 2)
 
     def drawLettersNumbers(self):
         for row in range(0,BOARD_DIM):
             font = p.font.SysFont(None, 20)
             text = font.render(str(abs(row-8)), True, p.Color("black"))
-            self.screen.blit(text, (0, row*GUI_SQ_SIZE+5))
+            self.screen.blit(text, (0, GUI_PIECE_CEMETARY_HEIGHT+row*GUI_SQ_SIZE+5))
         
         for col in range(0,BOARD_DIM):
             font = p.font.SysFont(None, 20)
             text = font.render(FILE_INT_TO_STR_MAPPING[col], True, p.Color("black"))
-            self.screen.blit(text, (col*GUI_SQ_SIZE+2, BOARD_DIM*GUI_SQ_SIZE-15))
+            self.screen.blit(text, (col*GUI_SQ_SIZE+2, GUI_PIECE_CEMETARY_HEIGHT+BOARD_DIM*GUI_SQ_SIZE-15))
     
     def drawHighlightMoves(self):
         color = p.Color(BOARD_COLOR_HIGHLIGHTED_TILES)
@@ -53,7 +54,7 @@ class GUI:
         for row in range(BOARD_DIM):
             for col in range(BOARD_DIM):
                 color = colors[((col+row)%2)]
-                p.draw.rect(self.screen, color, p.Rect(col*GUI_SQ_SIZE, row*GUI_SQ_SIZE, GUI_SQ_SIZE, GUI_SQ_SIZE))
+                p.draw.rect(self.screen, color, p.Rect(col*GUI_SQ_SIZE, GUI_PIECE_CEMETARY_HEIGHT+row*GUI_SQ_SIZE, GUI_SQ_SIZE, GUI_SQ_SIZE))
 	
     def drawPieces(self):
         for i in range(TOTAL_SQUARES):
@@ -61,7 +62,7 @@ class GUI:
             file = i % 8
             piece = self.board.piece_at(i)
             if piece != None:
-                self.screen.blit(self.piece_images[str(piece)], p.Rect(file*GUI_SQ_SIZE, rank*GUI_SQ_SIZE, GUI_SQ_SIZE, GUI_SQ_SIZE))     
+                self.screen.blit(self.piece_images[str(piece)], p.Rect(file*GUI_SQ_SIZE, GUI_PIECE_CEMETARY_HEIGHT+rank*GUI_SQ_SIZE, GUI_SQ_SIZE, GUI_SQ_SIZE))     
 
     def showBoard(self):
         for e in p.event.get():
@@ -92,7 +93,7 @@ class GUI:
                 #     self.playerClicks = []
 					
         self.drawSquares()
-        self.drawHighlightMoves()
+        # self.drawHighlightMoves()
         self.drawLines()
         self.drawLettersNumbers()
         self.drawPieces()
