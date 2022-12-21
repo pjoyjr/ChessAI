@@ -47,16 +47,16 @@ class GUI:
     def drawLettersNumbers(self):
         for row in range(0,BOARD_DIM):
             font = p.font.SysFont(None, 20)
-            text = font.render(str(abs(row-8)), True, p.Color("black"))
+            text = font.render(str(row+1), True, p.Color("black"))
             x_pos = GUI_SPACING_COLUMN_WIDTH
-            y_pos = GUI_GRAVEYARD_HEIGHT+row*GUI_SQ_SIZE+5
+            y_pos = GUI_GRAVEYARD_HEIGHT+row*GUI_SQ_SIZE+GUI_SQ_SIZE-15
             self.screen.blit(text, (x_pos, y_pos))
         
         for col in range(0,BOARD_DIM):
             font = p.font.SysFont(None, 20)
             text = font.render(FILE_INT_TO_STR_MAPPING[col], True, p.Color("black"))
-            x_pos = GUI_SPACING_COLUMN_WIDTH+col*GUI_SQ_SIZE+2
-            y_pos = GUI_GRAVEYARD_HEIGHT+BOARD_DIM*GUI_SQ_SIZE-15
+            x_pos = GUI_SPACING_COLUMN_WIDTH+col*GUI_SQ_SIZE+3
+            y_pos = GUI_GRAVEYARD_HEIGHT+3
             self.screen.blit(text, (x_pos, y_pos))
     
     def drawHighlightMoves(self):
@@ -108,10 +108,7 @@ class GUI:
                         self.highlighted_tiles = []
                         self.sq_selected = tile_name
                         self.player_clicks.append(self.sq_selected)
-                        print(f"player clicked: {self.player_clicks}")
-
                         found_move = False
-
                         if len(self.player_clicks) == 2:
                             move_str = self.player_clicks[0] + self.player_clicks[1]
                             print(move_str)
@@ -132,10 +129,10 @@ class GUI:
                     
 					
         self.drawSquares()
-        self.drawHighlightMoves()
+        # self.drawHighlightMoves()
         self.drawLines()
         self.drawLettersNumbers()
-        self.drawPieces()
+        # self.drawPieces()
         self.clock.tick(FPS)
         p.display.flip()
 
