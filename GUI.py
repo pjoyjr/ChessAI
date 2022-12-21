@@ -19,6 +19,7 @@ class GUI:
         self.player_clicks = [] #list that keep track of player clicks (2 tuples[(6, 4), (4, 4)]
 
         self.highlighted_tiles = []
+        self.running = True
 
 
     def loadImages(self):
@@ -88,7 +89,7 @@ class GUI:
     def showBoard(self):
         for e in p.event.get():
             if e.type == p.QUIT:
-                return False
+                self.running = False
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos() # (x, y) location of mouse
                 x_mouse = location[0]
@@ -116,11 +117,9 @@ class GUI:
                             print(move_str)
                             for move in self.board.legal_moves:
                                 if move_str == str(move):
-                                    print("Good Move")
-                                    found_move = True
                                     self.player_clicks = []
                                     self.highlighted_tiles = []
-                                    #TODO: MAKE MOVE
+                                    return move
                             if found_move is False:
                                 self.player_clicks = [self.sq_selected]
                         if len(self.player_clicks) == 1:
@@ -140,4 +139,4 @@ class GUI:
         self.clock.tick(FPS)
         p.display.flip()
 
-        return True
+        return None

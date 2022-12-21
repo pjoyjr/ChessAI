@@ -7,12 +7,12 @@ def main():
     board = chess.Board()
     gui = GUI(board)
     running = True
-    while gui.showBoard():
-        pass
-    # board.legal_moves
-
-    # chess.Move.from_uci("a8a1") in board.legal_moves
-
+    while gui.running:
+        move = gui.showBoard()
+        if move != None:
+            print(move)
+            board.push(move)
+            print(board)
     # board.push_san("e4")
     # board.push_san("e5")
     # board.push_san("Qh5")
