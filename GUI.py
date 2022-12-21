@@ -47,17 +47,17 @@ class GUI:
     def drawLettersNumbers(self):
         for row in range(0,BOARD_DIM):
             font = p.font.SysFont(None, 20)
-            text = font.render(str(row+1), True, p.Color("black"))
-            x_pos = GUI_SPACING_COLUMN_WIDTH
+            rank_text = font.render(str(abs(8-row)), True, p.Color("black"))
+            x_pos = GUI_SPACING_COLUMN_WIDTH+2
             y_pos = GUI_GRAVEYARD_HEIGHT+row*GUI_SQ_SIZE+GUI_SQ_SIZE-15
-            self.screen.blit(text, (x_pos, y_pos))
+            self.screen.blit(rank_text, (x_pos, y_pos))
         
         for col in range(0,BOARD_DIM):
             font = p.font.SysFont(None, 20)
-            text = font.render(FILE_INT_TO_STR_MAPPING[col], True, p.Color("black"))
-            x_pos = GUI_SPACING_COLUMN_WIDTH+col*GUI_SQ_SIZE+3
-            y_pos = GUI_GRAVEYARD_HEIGHT+3
-            self.screen.blit(text, (x_pos, y_pos))
+            file_text = font.render(FILE_INT_TO_STR_MAPPING[col], True, p.Color("black"))
+            x_pos = GUI_SPACING_COLUMN_WIDTH+col*GUI_SQ_SIZE+2
+            y_pos = GUI_GRAVEYARD_HEIGHT+GUI_BOARD_HEIGHT-GUI_SQ_SIZE+2
+            self.screen.blit(file_text, (x_pos, y_pos))
     
     def drawHighlightMoves(self):
         color = p.Color(BOARD_COLOR_HIGHLIGHTED_TILES)
@@ -129,10 +129,10 @@ class GUI:
                     
 					
         self.drawSquares()
-        # self.drawHighlightMoves()
+        self.drawHighlightMoves()
         self.drawLines()
         self.drawLettersNumbers()
-        # self.drawPieces()
+        self.drawPieces()
         self.clock.tick(FPS)
         p.display.flip()
 
