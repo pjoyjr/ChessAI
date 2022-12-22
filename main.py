@@ -13,6 +13,8 @@ def main():
             print(move)
             board.push(move)
             print(board)
+            if board.outcome():
+                print(board.outcome())   
     # board.push_san("e4")
     # board.push_san("e5")
     # board.push_san("Qh5")

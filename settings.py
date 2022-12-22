@@ -29,18 +29,18 @@ BOARD_COLOR_HIGHLIGHTED_TILES="palegoldenrod"
 
 IMG_PATH = "png\\"
 PIECE_IMG_MAPPING = {
-    "b": IMG_PATH + "b.png",
-    "k": IMG_PATH + "k.png",
-    "n": IMG_PATH + "n.png",
-    "p": IMG_PATH + "p.png",
-    "q": IMG_PATH + "q.png",
-    "r": IMG_PATH + "r.png",
-    "B": IMG_PATH + "Bb.png",
-    "K": IMG_PATH + "Bk.png",
-    "N": IMG_PATH + "Bn.png",
-    "P": IMG_PATH + "Bp.png",
-    "Q": IMG_PATH + "Bq.png",
-    "R": IMG_PATH + "Br.png",
+    "B": IMG_PATH + "b.png",
+    "K": IMG_PATH + "k.png",
+    "N": IMG_PATH + "n.png",
+    "P": IMG_PATH + "p.png",
+    "Q": IMG_PATH + "q.png",
+    "R": IMG_PATH + "r.png",
+    "b": IMG_PATH + "Bb.png",
+    "k": IMG_PATH + "Bk.png",
+    "n": IMG_PATH + "Bn.png",
+    "p": IMG_PATH + "Bp.png",
+    "q": IMG_PATH + "Bq.png",
+    "r": IMG_PATH + "Br.png",
 }
 
 FILE_INT_TO_STR_MAPPING = {

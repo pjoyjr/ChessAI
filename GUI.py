@@ -29,20 +29,20 @@ class GUI:
 
     def drawLines(self):
         color = p.Color("black")
-        for row in range(1,BOARD_DIM):
-            for col in range(1,BOARD_DIM):
-                #separate cols
-                x_start = GUI_SPACING_COLUMN_WIDTH+col*GUI_SQ_SIZE
-                x_end = GUI_SPACING_COLUMN_WIDTH+col*GUI_SQ_SIZE
-                y_start = GUI_GRAVEYARD_HEIGHT
-                y_end = GUI_BOARD_WIDTH+GUI_GRAVEYARD_HEIGHT
-                p.draw.line(self.screen, color, (x_start, y_start), (x_end, y_end), 2)
-                #separate rows
-                x_start = GUI_SPACING_COLUMN_WIDTH
-                x_end = GUI_SPACING_COLUMN_WIDTH+GUI_BOARD_HEIGHT
-                y_start = GUI_GRAVEYARD_HEIGHT+row*GUI_SQ_SIZE
-                y_end = GUI_GRAVEYARD_HEIGHT+row*GUI_SQ_SIZE
-                p.draw.line(self.screen, color, (x_start, y_start), (x_end, y_end), 2)
+        #separate cols
+        for col in range(0,BOARD_DIM):
+            x_start = GUI_SPACING_COLUMN_WIDTH+col*GUI_SQ_SIZE
+            x_end = GUI_SPACING_COLUMN_WIDTH+col*GUI_SQ_SIZE
+            y_start = GUI_GRAVEYARD_HEIGHT
+            y_end = GUI_BOARD_WIDTH+GUI_GRAVEYARD_HEIGHT
+            p.draw.line(self.screen, color, (x_start, y_start), (x_end, y_end), 2)
+        #separate rows
+        for row in range(0,BOARD_DIM):
+            x_start = GUI_SPACING_COLUMN_WIDTH
+            x_end = GUI_SPACING_COLUMN_WIDTH+GUI_BOARD_HEIGHT
+            y_start = GUI_GRAVEYARD_HEIGHT+row*GUI_SQ_SIZE
+            y_end = GUI_GRAVEYARD_HEIGHT+row*GUI_SQ_SIZE
+            p.draw.line(self.screen, color, (x_start, y_start), (x_end, y_end), 2)
 
     def drawLettersNumbers(self):
         for row in range(0,BOARD_DIM):
@@ -80,7 +80,8 @@ class GUI:
         for i in range(TOTAL_SQUARES):
             rank = floor(i / 8)
             file = i % 8
-            piece = self.board.piece_at(i)
+            i_board = abs(7-rank)*8+file
+            piece = self.board.piece_at(i_board)
             if piece != None:
                 left_pos = GUI_SPACING_COLUMN_WIDTH+file*GUI_SQ_SIZE
                 top_pos = GUI_GRAVEYARD_HEIGHT+rank*GUI_SQ_SIZE
@@ -94,7 +95,9 @@ class GUI:
                 location = p.mouse.get_pos() # (x, y) location of mouse
                 x_mouse = location[0]
                 y_mouse = location[1]
-                if(x_mouse > GUI_BOARD_WIDTH_OFFSET and x_mouse < GUI_BOARD_WIDTH + GUI_BOARD_WIDTH_OFFSET) and (y_mouse > GUI_BOARD_HEIGHT_OFFSET and y_mouse < GUI_BOARD_HEIGHT + GUI_BOARD_HEIGHT_OFFSET):
+                if(x_mouse > GUI_BOARD_WIDTH_OFFSET and x_mouse < GUI_BOARD_WIDTH + GUI_BOARD_WIDTH_OFFSET) \
+                and (y_mouse > GUI_BOARD_HEIGHT_OFFSET and y_mouse < GUI_BOARD_HEIGHT + GUI_BOARD_HEIGHT_OFFSET) \
+                and not self.board.outcome():
                     file_int = (location[0]-GUI_BOARD_WIDTH_OFFSET)//GUI_SQ_SIZE
                     file_str = FILE_INT_TO_STR_MAPPING[file_int]
                     rank_int = (location[1]-GUI_BOARD_HEIGHT_OFFSET)//GUI_SQ_SIZE
