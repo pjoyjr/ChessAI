@@ -3,29 +3,21 @@ from GUI import GUI
 #https://pypi.org/project/chess/
 
 
+def whichColor(boardTurn: bool) -> str:
+    if boardTurn:
+        return "White"
+    return "black"
+
+
 def main():
     board = chess.Board()
     gui = GUI(board)
-    running = True
-    while gui.running:
+    while gui.running and board.legal_moves:
+        # print(whosTurn(board.turn))
         move = gui.showBoard()
         if move != None:
-            print(move)
             board.push(move)
-            print(board)
-            if board.outcome():
-                print(board.outcome())   
-    # board.push_san("e4")
-    # board.push_san("e5")
-    # board.push_san("Qh5")
-    # board.push_san("Nc6")
-    # board.push_san("Bc4")
-    # board.push_san("Nf6")
-    # board.push_san("Qxf7")
-
-    # board.is_checkmate()
-
-    # print(board)
+    print(board.outcome)
 
 if __name__== "__main__":
     main() 

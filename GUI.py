@@ -114,7 +114,6 @@ class GUI:
                         found_move = False
                         if len(self.player_clicks) == 2:
                             move_str = self.player_clicks[0] + self.player_clicks[1]
-                            print(move_str)
                             for move in self.board.legal_moves:
                                 if move_str == str(move):
                                     self.player_clicks = []
